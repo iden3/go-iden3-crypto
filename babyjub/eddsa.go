@@ -2,11 +2,9 @@ package babyjub
 
 import (
 	"crypto/rand"
-	// "encoding/hex"
-	// "fmt"
-	common3 "github.com/iden3/go-iden3/common"
-	"github.com/iden3/go-iden3/crypto/mimc7"
-	// "golang.org/x/crypto/blake2b"
+
+	"github.com/iden3/go-iden3-crypto/mimc7"
+
 	"math/big"
 )
 
@@ -78,17 +76,17 @@ type PublicKey Point
 
 func (pk PublicKey) MarshalText() ([]byte, error) {
 	pkc := pk.Compress()
-	return common3.Hex(pkc[:]).MarshalText()
+	return Hex(pkc[:]).MarshalText()
 }
 
 func (pk PublicKey) String() string {
 	pkc := pk.Compress()
-	return common3.Hex(pkc[:]).String()
+	return Hex(pkc[:]).String()
 }
 
 func (pk *PublicKey) UnmarshalText(h []byte) error {
 	var pkc PublicKeyComp
-	if err := common3.HexDecodeInto(pkc[:], h); err != nil {
+	if err := HexDecodeInto(pkc[:], h); err != nil {
 		return err
 	}
 	pkd, err := pkc.Decompress()
@@ -108,9 +106,9 @@ func (p *PublicKey) Point() *Point {
 // point.
 type PublicKeyComp [32]byte
 
-func (buf PublicKeyComp) MarshalText() ([]byte, error)  { return common3.Hex(buf[:]).MarshalText() }
-func (buf PublicKeyComp) String() string                { return common3.Hex(buf[:]).String() }
-func (buf *PublicKeyComp) UnmarshalText(h []byte) error { return common3.HexDecodeInto(buf[:], h) }
+func (buf PublicKeyComp) MarshalText() ([]byte, error)  { return Hex(buf[:]).MarshalText() }
+func (buf PublicKeyComp) String() string                { return Hex(buf[:]).String() }
+func (buf *PublicKeyComp) UnmarshalText(h []byte) error { return HexDecodeInto(buf[:], h) }
 
 func (p *PublicKey) Compress() PublicKeyComp {
 	return PublicKeyComp((*Point)(p).Compress())
@@ -134,9 +132,9 @@ type Signature struct {
 // SignatureComp represents a compressed EdDSA signature.
 type SignatureComp [64]byte
 
-func (buf SignatureComp) MarshalText() ([]byte, error)  { return common3.Hex(buf[:]).MarshalText() }
-func (buf SignatureComp) String() string                { return common3.Hex(buf[:]).String() }
-func (buf *SignatureComp) UnmarshalText(h []byte) error { return common3.HexDecodeInto(buf[:], h) }
+func (buf SignatureComp) MarshalText() ([]byte, error)  { return Hex(buf[:]).MarshalText() }
+func (buf SignatureComp) String() string                { return Hex(buf[:]).String() }
+func (buf *SignatureComp) UnmarshalText(h []byte) error { return HexDecodeInto(buf[:], h) }
 
 // Compress an EdDSA signature by concatenating the compression of
 // the point R8 and the Little-Endian encoding of S.

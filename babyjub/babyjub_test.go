@@ -1,11 +1,11 @@
 package babyjub
 
 import (
-	// "fmt"
 	"encoding/hex"
-	"github.com/stretchr/testify/assert"
 	"math/big"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAdd1(t *testing.T) {

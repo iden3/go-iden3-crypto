@@ -6,7 +6,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/iden3/go-iden3/crypto/field"
+	"github.com/iden3/go-iden3-crypto/field"
 )
 
 const SEED = "mimc"
