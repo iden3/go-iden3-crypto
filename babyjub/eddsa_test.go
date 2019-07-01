@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/iden3/go-iden3-crypto/constants"
+	"github.com/iden3/go-iden3-crypto/utils"
 	"github.com/stretchr/testify/assert"
 
 	"math/big"
@@ -17,8 +19,8 @@ func genInputs() (*PrivateKey, *big.Int) {
 
 	msgBuf := [32]byte{}
 	rand.Read(msgBuf[:])
-	msg := SetBigIntFromLEBytes(new(big.Int), msgBuf[:])
-	msg.Mod(msg, Q)
+	msg := utils.SetBigIntFromLEBytes(new(big.Int), msgBuf[:])
+	msg.Mod(msg, constants.Q)
 	fmt.Println("msg", msg)
 
 	return &k, msg
@@ -31,7 +33,7 @@ func TestSignVerify1(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	msg := SetBigIntFromLEBytes(new(big.Int), msgBuf)
+	msg := utils.SetBigIntFromLEBytes(new(big.Int), msgBuf)
 
 	pk := k.Public()
 	assert.Equal(t,
@@ -77,7 +79,7 @@ func TestCompressDecompress(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		msg := SetBigIntFromLEBytes(new(big.Int), msgBuf)
+		msg := utils.SetBigIntFromLEBytes(new(big.Int), msgBuf)
 		sig := k.SignMimc7(msg)
 		sigBuf := sig.Compress()
 		sig2, err := new(Signature).Decompress(sigBuf)

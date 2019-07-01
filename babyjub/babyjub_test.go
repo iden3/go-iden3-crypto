@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/iden3/go-iden3-crypto/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,15 +20,15 @@ func TestAdd1(t *testing.T) {
 }
 
 func TestAdd2(t *testing.T) {
-	aX := NewIntFromString(
+	aX := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	aY := NewIntFromString(
+	aY := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	a := &Point{X: aX, Y: aY}
 
-	bX := NewIntFromString(
+	bX := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	bY := NewIntFromString(
+	bY := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	b := &Point{X: bX, Y: bY}
 
@@ -42,15 +43,15 @@ func TestAdd2(t *testing.T) {
 }
 
 func TestAdd3(t *testing.T) {
-	aX := NewIntFromString(
+	aX := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	aY := NewIntFromString(
+	aY := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	a := &Point{X: aX, Y: aY}
 
-	bX := NewIntFromString(
+	bX := utils.NewIntFromString(
 		"16540640123574156134436876038791482806971768689494387082833631921987005038935")
-	bY := NewIntFromString(
+	bY := utils.NewIntFromString(
 		"20819045374670962167435360035096875258406992893633759881276124905556507972311")
 	b := &Point{X: bX, Y: bY}
 
@@ -65,15 +66,15 @@ func TestAdd3(t *testing.T) {
 }
 
 func TestAdd4(t *testing.T) {
-	aX := NewIntFromString(
+	aX := utils.NewIntFromString(
 		"0")
-	aY := NewIntFromString(
+	aY := utils.NewIntFromString(
 		"1")
 	a := &Point{X: aX, Y: aY}
 
-	bX := NewIntFromString(
+	bX := utils.NewIntFromString(
 		"16540640123574156134436876038791482806971768689494387082833631921987005038935")
-	bY := NewIntFromString(
+	bY := utils.NewIntFromString(
 		"20819045374670962167435360035096875258406992893633759881276124905556507972311")
 	b := &Point{X: bX, Y: bY}
 
@@ -98,12 +99,12 @@ func TestInCurve2(t *testing.T) {
 }
 
 func TestMul0(t *testing.T) {
-	x := NewIntFromString(
+	x := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := NewIntFromString(
+	y := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
-	s := NewIntFromString("3")
+	s := utils.NewIntFromString("3")
 
 	r2 := NewPoint().Add(p, p)
 	r2 = NewPoint().Add(r2, p)
@@ -120,12 +121,12 @@ func TestMul0(t *testing.T) {
 }
 
 func TestMul1(t *testing.T) {
-	x := NewIntFromString(
+	x := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := NewIntFromString(
+	y := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
-	s := NewIntFromString(
+	s := utils.NewIntFromString(
 		"14035240266687799601661095864649209771790948434046947201833777492504781204499")
 	r := NewPoint().Mul(s, p)
 	assert.Equal(t,
@@ -137,12 +138,12 @@ func TestMul1(t *testing.T) {
 }
 
 func TestMul2(t *testing.T) {
-	x := NewIntFromString(
+	x := utils.NewIntFromString(
 		"6890855772600357754907169075114257697580319025794532037257385534741338397365")
-	y := NewIntFromString(
+	y := utils.NewIntFromString(
 		"4338620300185947561074059802482547481416142213883829469920100239455078257889")
 	p := &Point{X: x, Y: y}
-	s := NewIntFromString(
+	s := utils.NewIntFromString(
 		"20819045374670962167435360035096875258406992893633759881276124905556507972311")
 	r := NewPoint().Mul(s, p)
 	assert.Equal(t,
@@ -154,45 +155,45 @@ func TestMul2(t *testing.T) {
 }
 
 func TestInCurve3(t *testing.T) {
-	x := NewIntFromString(
+	x := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := NewIntFromString(
+	y := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
 	assert.Equal(t, true, p.InCurve())
 }
 
 func TestInCurve4(t *testing.T) {
-	x := NewIntFromString(
+	x := utils.NewIntFromString(
 		"6890855772600357754907169075114257697580319025794532037257385534741338397365")
-	y := NewIntFromString(
+	y := utils.NewIntFromString(
 		"4338620300185947561074059802482547481416142213883829469920100239455078257889")
 	p := &Point{X: x, Y: y}
 	assert.Equal(t, true, p.InCurve())
 }
 
 func TestInSubGroup1(t *testing.T) {
-	x := NewIntFromString(
+	x := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := NewIntFromString(
+	y := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
 	assert.Equal(t, true, p.InSubGroup())
 }
 
 func TestInSubGroup2(t *testing.T) {
-	x := NewIntFromString(
+	x := utils.NewIntFromString(
 		"6890855772600357754907169075114257697580319025794532037257385534741338397365")
-	y := NewIntFromString(
+	y := utils.NewIntFromString(
 		"4338620300185947561074059802482547481416142213883829469920100239455078257889")
 	p := &Point{X: x, Y: y}
 	assert.Equal(t, true, p.InSubGroup())
 }
 
 func TestCompressDecompress1(t *testing.T) {
-	x := NewIntFromString(
+	x := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := NewIntFromString(
+	y := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
 
@@ -206,9 +207,9 @@ func TestCompressDecompress1(t *testing.T) {
 }
 
 func TestCompressDecompress2(t *testing.T) {
-	x := NewIntFromString(
+	x := utils.NewIntFromString(
 		"6890855772600357754907169075114257697580319025794532037257385534741338397365")
-	y := NewIntFromString(
+	y := utils.NewIntFromString(
 		"4338620300185947561074059802482547481416142213883829469920100239455078257889")
 	p := &Point{X: x, Y: y}
 
