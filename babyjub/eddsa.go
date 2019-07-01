@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 
 	"github.com/iden3/go-iden3-crypto/mimc7"
+	"github.com/iden3/go-iden3-crypto/utils"
 
 	"math/big"
 )
@@ -39,7 +40,7 @@ func (k *PrivateKey) Scalar() *PrivKeyScalar {
 	copy(sBuf32[:], sBuf[:32])
 	pruneBuffer(&sBuf32)
 	s := new(big.Int)
-	SetBigIntFromLEBytes(s, sBuf32[:])
+	utils.SetBigIntFromLEBytes(s, sBuf32[:])
 	s.Rsh(s, 3)
 	return NewPrivKeyScalar(s)
 }
@@ -76,17 +77,17 @@ type PublicKey Point
 
 func (pk PublicKey) MarshalText() ([]byte, error) {
 	pkc := pk.Compress()
-	return Hex(pkc[:]).MarshalText()
+	return utils.Hex(pkc[:]).MarshalText()
 }
 
 func (pk PublicKey) String() string {
 	pkc := pk.Compress()
-	return Hex(pkc[:]).String()
+	return utils.Hex(pkc[:]).String()
 }
 
 func (pk *PublicKey) UnmarshalText(h []byte) error {
 	var pkc PublicKeyComp
-	if err := HexDecodeInto(pkc[:], h); err != nil {
+	if err := utils.HexDecodeInto(pkc[:], h); err != nil {
 		return err
 	}
 	pkd, err := pkc.Decompress()
@@ -106,9 +107,9 @@ func (p *PublicKey) Point() *Point {
 // point.
 type PublicKeyComp [32]byte
 
-func (buf PublicKeyComp) MarshalText() ([]byte, error)  { return Hex(buf[:]).MarshalText() }
-func (buf PublicKeyComp) String() string                { return Hex(buf[:]).String() }
-func (buf *PublicKeyComp) UnmarshalText(h []byte) error { return HexDecodeInto(buf[:], h) }
+func (buf PublicKeyComp) MarshalText() ([]byte, error)  { return utils.Hex(buf[:]).MarshalText() }
+func (buf PublicKeyComp) String() string                { return utils.Hex(buf[:]).String() }
+func (buf *PublicKeyComp) UnmarshalText(h []byte) error { return utils.HexDecodeInto(buf[:], h) }
 
 func (p *PublicKey) Compress() PublicKeyComp {
 	return PublicKeyComp((*Point)(p).Compress())
@@ -132,15 +133,15 @@ type Signature struct {
 // SignatureComp represents a compressed EdDSA signature.
 type SignatureComp [64]byte
 
-func (buf SignatureComp) MarshalText() ([]byte, error)  { return Hex(buf[:]).MarshalText() }
-func (buf SignatureComp) String() string                { return Hex(buf[:]).String() }
-func (buf *SignatureComp) UnmarshalText(h []byte) error { return HexDecodeInto(buf[:], h) }
+func (buf SignatureComp) MarshalText() ([]byte, error)  { return utils.Hex(buf[:]).MarshalText() }
+func (buf SignatureComp) String() string                { return utils.Hex(buf[:]).String() }
+func (buf *SignatureComp) UnmarshalText(h []byte) error { return utils.HexDecodeInto(buf[:], h) }
 
 // Compress an EdDSA signature by concatenating the compression of
 // the point R8 and the Little-Endian encoding of S.
 func (s *Signature) Compress() SignatureComp {
 	R8p := s.R8.Compress()
-	Sp := BigIntLEBytes(s.S)
+	Sp := utils.BigIntLEBytes(s.S)
 	buf := [64]byte{}
 	copy(buf[:32], R8p[:])
 	copy(buf[32:], Sp[:])
@@ -156,7 +157,7 @@ func (s *Signature) Decompress(buf [64]byte) (*Signature, error) {
 	if s.R8, err = NewPoint().Decompress(R8p); err != nil {
 		return nil, err
 	}
-	s.S = SetBigIntFromLEBytes(new(big.Int), buf[32:])
+	s.S = utils.SetBigIntFromLEBytes(new(big.Int), buf[32:])
 	return s, nil
 }
 
@@ -170,11 +171,11 @@ func (s *SignatureComp) Decompress() (*Signature, error) {
 // for buffer hashing and mimc7 for big.Int hashing.
 func (k *PrivateKey) SignMimc7(msg *big.Int) *Signature {
 	h1 := Blake512(k[:])
-	msgBuf := BigIntLEBytes(msg)
+	msgBuf := utils.BigIntLEBytes(msg)
 	msgBuf32 := [32]byte{}
 	copy(msgBuf32[:], msgBuf[:])
 	rBuf := Blake512(append(h1[32:], msgBuf32[:]...))
-	r := SetBigIntFromLEBytes(new(big.Int), rBuf) // r = H(H_{32..63}(k), msg)
+	r := utils.SetBigIntFromLEBytes(new(big.Int), rBuf) // r = H(H_{32..63}(k), msg)
 	r.Mod(r, SubOrder)
 	R8 := NewPoint().Mul(r, B8) // R8 = r * 8 * B
 	A := k.Public().Point()

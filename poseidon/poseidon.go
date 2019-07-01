@@ -6,7 +6,9 @@ import (
 	"math/big"
 	"strconv"
 
+	_constants "github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-iden3-crypto/field"
+	"github.com/iden3/go-iden3-crypto/utils"
 	"golang.org/x/crypto/blake2b"
 )
 
@@ -23,55 +25,35 @@ type constantsData struct {
 	m   [][]*big.Int
 }
 
-// checkBigIntInField checks if given big.Int fits in a Field R element
-func checkBigIntInField(a *big.Int, q *big.Int) bool {
-	if a.Cmp(q) != -1 {
-		return false
-	}
-	return true
-}
-
-// checkBigIntArrayInField checks if given big.Int fits in a Field R element
-func checkBigIntArrayInField(arr []*big.Int, q *big.Int) bool {
-	for _, a := range arr {
-		if !checkBigIntInField(a, q) {
-			return false
-		}
-	}
-	return true
-}
-
 func generateConstantsData() constantsData {
 	var constants constantsData
 
-	r, ok := new(big.Int).SetString("21888242871839275222246405745257275088548364400416034343698204186575808495617", 10)
-	if !ok {
-
-	}
-	fqR := field.NewFq(r)
+	fqR := field.NewFq(_constants.Q)
 	constants.fqR = fqR
-	constants.c = getPseudoRandom(fqR, SEED+"_constants", big.NewInt(int64(NROUNDSF+NROUNDSP)))
+	constants.c = getPseudoRandom(fqR, SEED+"_constants", NROUNDSF+NROUNDSP)
 	constants.m = getMDS(fqR)
 
 	return constants
 }
 
-func getPseudoRandom(fqR field.Fq, seed string, n *big.Int) []*big.Int {
-	var res []*big.Int
-	hash := blake2b.Sum256([]byte(seed))
-	for big.NewInt(int64(len(res))).Cmp(n) == -1 { // res < n
-		newN := fqR.Affine(leByteArrayToBigInt(fqR, hash[:]))
-		res = append(res, newN)
-		hash = blake2b.Sum256(hash[:])
+func leByteArrayToBigInt(b []byte) *big.Int {
+	res := big.NewInt(0)
+	for i := 0; i < len(b); i++ {
+		n := big.NewInt(int64(b[i]))
+		res = new(big.Int).Add(res, new(big.Int).Lsh(n, uint(i*8)))
 	}
 	return res
 }
 
-func leByteArrayToBigInt(fqR field.Fq, b []byte) *big.Int {
-	res := fqR.Zero()
-	for i := 0; i < len(b); i++ {
-		n := big.NewInt(int64(b[i]))
-		res = new(big.Int).Add(res, new(big.Int).Lsh(n, uint(i*8)))
+func getPseudoRandom(fqR field.Fq, seed string, n int) []*big.Int {
+	var res []*big.Int
+	hash := blake2b.Sum256([]byte(seed))
+	for len(res) < n {
+		hashBigInt := new(big.Int)
+		newN := fqR.Affine(utils.SetBigIntFromLEBytes(hashBigInt, hash[:]))
+		// newN := fqR.Affine(leByteArrayToBigInt(hash[:]))
+		res = append(res, newN)
+		hash = blake2b.Sum256(hash[:])
 	}
 	return res
 }
@@ -87,10 +69,10 @@ func nonceToString(n int) string {
 // https://eprint.iacr.org/2019/458.pdf pag.8
 func getMDS(fqR field.Fq) [][]*big.Int {
 	nonce := 0
-	cauchyMatrix := getPseudoRandom(fqR, SEED+"_matrix_"+nonceToString(nonce), big.NewInt(T*2))
+	cauchyMatrix := getPseudoRandom(fqR, SEED+"_matrix_"+nonceToString(nonce), T*2)
 	for !checkAllDifferent(cauchyMatrix) {
 		nonce += 1
-		cauchyMatrix = getPseudoRandom(fqR, SEED+"_matrix_"+nonceToString(nonce), big.NewInt(T*2))
+		cauchyMatrix = getPseudoRandom(fqR, SEED+"_matrix_"+nonceToString(nonce), T*2)
 	}
 	var m [][]*big.Int
 	for i := 0; i < T; i++ {
@@ -160,10 +142,10 @@ func mix(state []*big.Int, m [][]*big.Int) []*big.Int {
 // Hash computes the Poseidon hash for the given inputs
 func Hash(inp []*big.Int) (*big.Int, error) {
 	var state []*big.Int
-	if len(inp) < 0 || len(inp) > T {
+	if len(inp) == 0 || len(inp) > T {
 		return nil, errors.New("wrong inputs length")
 	}
-	if !checkBigIntArrayInField(inp, constants.fqR.Q) {
+	if !utils.CheckBigIntArrayInField(inp, constants.fqR.Q) {
 		return nil, errors.New("inputs values not inside Finite Field")
 	}
 

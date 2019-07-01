@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/crypto"
+	_constants "github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-iden3-crypto/field"
 )
 
@@ -31,11 +32,7 @@ func getIV(seed string) {
 func generateConstantsData() constantsData {
 	var constants constantsData
 
-	r, ok := new(big.Int).SetString("21888242871839275222246405745257275088548364400416034343698204186575808495617", 10)
-	if !ok {
-
-	}
-	fqR := field.NewFq(r)
+	fqR := field.NewFq(_constants.Q)
 	constants.fqR = fqR
 
 	// maxFieldVal is the R value of the Finite Field
