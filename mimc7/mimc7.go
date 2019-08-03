@@ -26,9 +26,6 @@ type constantsData struct {
 	cts         []*big.Int
 }
 
-func getIV(seed string) {
-}
-
 func generateConstantsData() constantsData {
 	var constants constantsData
 
@@ -43,10 +40,7 @@ func generateConstantsData() constantsData {
 	constants.iv = new(big.Int).Mod(c, constants.maxFieldVal)
 
 	constants.nRounds = 91
-	cts, err := getConstants(constants.fqR, SEED, constants.nRounds)
-	if err != nil {
-		panic(err)
-	}
+	cts := getConstants(constants.fqR, SEED, constants.nRounds)
 	constants.cts = cts
 	return constants
 }
@@ -81,7 +75,7 @@ func RElemsToBigInts(arr []RElem) []*big.Int {
 	return o
 }
 
-func getConstants(fqR field.Fq, seed string, nRounds int) ([]*big.Int, error) {
+func getConstants(fqR field.Fq, seed string, nRounds int) []*big.Int {
 	cts := make([]*big.Int, nRounds)
 	cts[0] = big.NewInt(int64(0))
 	c := new(big.Int).SetBytes(crypto.Keccak256([]byte(SEED)))
@@ -91,15 +85,12 @@ func getConstants(fqR field.Fq, seed string, nRounds int) ([]*big.Int, error) {
 		n := fqR.Affine(c)
 		cts[i] = n
 	}
-	return cts, nil
+	return cts
 }
 
 // MIMC7HashGeneric performs the MIMC7 hash over a RElem, in a generic way, where it can be specified the Finite Field over R, and the number of rounds
-func MIMC7HashGeneric(fqR field.Fq, xIn, k *big.Int, nRounds int) (*big.Int, error) {
-	cts, err := getConstants(fqR, SEED, nRounds)
-	if err != nil {
-		return &big.Int{}, err
-	}
+func MIMC7HashGeneric(fqR field.Fq, xIn, k *big.Int, nRounds int) *big.Int {
+	cts := getConstants(fqR, SEED, nRounds)
 	var r *big.Int
 	for i := 0; i < nRounds; i++ {
 		var t *big.Int
@@ -112,7 +103,7 @@ func MIMC7HashGeneric(fqR field.Fq, xIn, k *big.Int, nRounds int) (*big.Int, err
 		t4 := fqR.Square(t2)
 		r = fqR.Mul(fqR.Mul(t4, t2), t)
 	}
-	return fqR.Affine(fqR.Add(r, k)), nil
+	return fqR.Affine(fqR.Add(r, k))
 }
 
 // HashGeneric performs the MIMC7 hash over a RElem array, in a generic way, where it can be specified the Finite Field over R, and the number of rounds
@@ -121,7 +112,7 @@ func HashGeneric(iv *big.Int, arrEl []RElem, fqR field.Fq, nRounds int) (RElem, 
 	r := iv
 	var err error
 	for i := 0; i < len(arr); i++ {
-		r, err = MIMC7HashGeneric(fqR, r, arr[i], nRounds)
+		r = MIMC7HashGeneric(fqR, r, arr[i], nRounds)
 		if err != nil {
 			return r, err
 		}

@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/iden3/go-iden3-crypto/field"
 	"github.com/stretchr/testify/assert"
 )
@@ -43,6 +44,13 @@ func TestUtils(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestKeccak256(t *testing.T) {
+	res := crypto.Keccak256([]byte(SEED))
+	assert.Equal(t, "b6e489e6b37224a50bebfddbe7d89fa8fdcaa84304a70bd13f79b5d9f7951e9e", hex.EncodeToString(res))
+	c := new(big.Int).SetBytes(crypto.Keccak256([]byte(SEED)))
+	assert.Equal(t, "82724731331859054037315113496710413141112897654334566532528783843265082629790", c.String())
+}
+
 func TestMIMC7Generic(t *testing.T) {
 	b1 := big.NewInt(int64(1))
 	b2 := big.NewInt(int64(2))
@@ -57,7 +65,7 @@ func TestMIMC7Generic(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Generic Hash
-	mhg, err := MIMC7HashGeneric(fqR, b1, b2, 91)
+	mhg := MIMC7HashGeneric(fqR, b1, b2, 91)
 	assert.Nil(t, err)
 	assert.Equal(t, "10594780656576967754230020536574539122676596303354946869887184401991294982664", mhg.String())
 	hg, err := HashGeneric(fqR.Zero(), elementsArray, fqR, 91)
@@ -85,10 +93,6 @@ func TestMIMC7(t *testing.T) {
 	bigArray2a := []*big.Int{b78, b41}
 	elementsArray2a, err := BigIntsToRElems(bigArray2a)
 	assert.Nil(t, err)
-
-	mh2a := MIMC7Hash(b12, b45)
-	assert.Nil(t, err)
-	assert.Equal(t, "0x"+hex.EncodeToString((*big.Int)(mh2a).Bytes()), "0x2ba7ebad3c6b6f5a20bdecba2333c63173ca1a5f2f49d958081d9fa7179c44e4")
 
 	h2a := Hash(elementsArray2a, nil)
 	assert.Nil(t, err)

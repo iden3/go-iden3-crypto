@@ -2,9 +2,10 @@ package babyjub
 
 import (
 	"fmt"
+	"math/big"
+
 	"github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-iden3-crypto/utils"
-	"math/big"
 )
 
 // A is one of the babyjub constants.
@@ -35,9 +36,9 @@ func init() {
 
 	B8 = NewPoint()
 	B8.X = utils.NewIntFromString(
-		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
+		"5299619240641551281634865583518297030282874472190772894086521144482721001553")
 	B8.Y = utils.NewIntFromString(
-		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
+		"16950150798460657717958625567821834550301663161624707787222815936182638968203")
 }
 
 // Point represents a point of the babyjub curve.
@@ -74,7 +75,7 @@ func (res *Point) Add(a *Point, b *Point) *Point {
 	x2.Mod(x2, constants.Q)
 	x2.ModInverse(x2, constants.Q) // x2 = (1 + D * a.x * b.x * a.y * b.y)^-1
 
-	// y = (a.y * b.y + A * a.x * a.x) * (1 - D * a.x * b.x * a.y * b.y)^-1 mod q
+	// y = (a.y * b.y - A * a.x * b.x) * (1 - D * a.x * b.x * a.y * b.y)^-1 mod q
 	y1a := new(big.Int).Mul(a.Y, b.Y)
 	y1b := new(big.Int).Set(A)
 	y1b.Mul(y1b, a.X)
