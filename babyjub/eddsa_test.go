@@ -4,13 +4,12 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+	"testing"
 
 	"github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-iden3-crypto/utils"
 	"github.com/stretchr/testify/assert"
-
-	"math/big"
-	"testing"
 )
 
 func genInputs() (*PrivateKey, *big.Int) {
@@ -26,7 +25,7 @@ func genInputs() (*PrivateKey, *big.Int) {
 	return &k, msg
 }
 
-func TestSignVerify1(t *testing.T) {
+func TestSignVerifyMimc7(t *testing.T) {
 	var k PrivateKey
 	hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
 	msgBuf, err := hex.DecodeString("00010203040506070809")
@@ -67,6 +66,50 @@ func TestSignVerify1(t *testing.T) {
 		hex.EncodeToString(sigBuf[:]))
 
 	ok = pk.VerifyMimc7(msg, sig2)
+	assert.Equal(t, true, ok)
+}
+
+func TestSignVerifyPoseidon(t *testing.T) {
+	var k PrivateKey
+	hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	msgBuf, err := hex.DecodeString("00010203040506070809")
+	if err != nil {
+		panic(err)
+	}
+	msg := utils.SetBigIntFromLEBytes(new(big.Int), msgBuf)
+
+	pk := k.Public()
+	assert.Equal(t,
+		"13277427435165878497778222415993513565335242147425444199013288855685581939618",
+		pk.X.String())
+	assert.Equal(t,
+		"13622229784656158136036771217484571176836296686641868549125388198837476602820",
+		pk.Y.String())
+
+	sig := k.SignPoseidon(msg)
+	assert.Equal(t,
+		"11384336176656855268977457483345535180380036354188103142384839473266348197733",
+		sig.R8.X.String())
+	assert.Equal(t,
+		"15383486972088797283337779941324724402501462225528836549661220478783371668959",
+		sig.R8.Y.String())
+	assert.Equal(t,
+		"248298168863866362217836334079793350221620631973732197668910946177382043688",
+		sig.S.String())
+
+	ok := pk.VerifyPoseidon(msg, sig)
+	assert.Equal(t, true, ok)
+
+	sigBuf := sig.Compress()
+	sig2, err := new(Signature).Decompress(sigBuf)
+	assert.Equal(t, nil, err)
+
+	assert.Equal(t, ""+
+		"dfedb4315d3f2eb4de2d3c510d7a987dcab67089c8ace06308827bf5bcbe02a2"+
+		"28506bce274aa1b3f7e7c2fd7e4fe09bff8f9aa37a42def7994e98f322888c00",
+		hex.EncodeToString(sigBuf[:]))
+
+	ok = pk.VerifyPoseidon(msg, sig2)
 	assert.Equal(t, true, ok)
 }
 

@@ -171,10 +171,7 @@ func PackPoint(ay *big.Int, sign bool) [32]byte {
 // Compress the point into a 32 byte array that contains the y coordinate in
 // little endian and the sign of the x coordinate.
 func (p *Point) Compress() [32]byte {
-	sign := false
-	if PointCoordSign(p.X) {
-		sign = true
-	}
+	sign := PointCoordSign(p.X)
 	return PackPoint(p.Y, sign)
 }
 

@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 
 	"github.com/iden3/go-iden3-crypto/mimc7"
+	"github.com/iden3/go-iden3-crypto/poseidon"
 	"github.com/iden3/go-iden3-crypto/utils"
 
 	"math/big"
@@ -200,6 +201,48 @@ func (p *PublicKey) VerifyMimc7(msg *big.Int, sig *Signature) bool {
 		panic(err)
 	}
 	hm := mimc7.Hash(hmInput, nil) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
+
+	left := NewPoint().Mul(sig.S, B8) // left = s * 8 * B
+	r1 := big.NewInt(8)
+	r1.Mul(r1, hm)
+	right := NewPoint().Mul(r1, p.Point())
+	right.Add(sig.R8, right) // right = 8 * R + 8 * hm * A
+	return (left.X.Cmp(right.X) == 0) && (left.Y.Cmp(right.Y) == 0)
+}
+
+// SignPoseidon signs a message encoded as a big.Int in Zq using blake-512 hash
+// for buffer hashing and Poseidon for big.Int hashing.
+func (k *PrivateKey) SignPoseidon(msg *big.Int) *Signature {
+	h1 := Blake512(k[:])
+	msgBuf := utils.BigIntLEBytes(msg)
+	msgBuf32 := [32]byte{}
+	copy(msgBuf32[:], msgBuf[:])
+	rBuf := Blake512(append(h1[32:], msgBuf32[:]...))
+	r := utils.SetBigIntFromLEBytes(new(big.Int), rBuf) // r = H(H_{32..63}(k), msg)
+	r.Mod(r, SubOrder)
+	R8 := NewPoint().Mul(r, B8) // R8 = r * 8 * B
+	A := k.Public().Point()
+	hmInput := []*big.Int{R8.X, R8.Y, A.X, A.Y, msg}
+	hm, err := poseidon.Hash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
+	if err != nil {
+		panic(err)
+	}
+	S := new(big.Int).Lsh(k.Scalar().BigInt(), 3)
+	S = S.Mul(hm, S)
+	S.Add(r, S)
+	S.Mod(S, SubOrder) // S = r + hm * 8 * s
+
+	return &Signature{R8: R8, S: S}
+}
+
+// VerifyPoseidon verifies the signature of a message encoded as a big.Int in Zq
+// using blake-512 hash for buffer hashing and Poseidon for big.Int hashing.
+func (p *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
+	hmInput := []*big.Int{sig.R8.X, sig.R8.Y, p.X, p.Y, msg}
+	hm, err := poseidon.Hash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
+	if err != nil {
+		panic(err)
+	}
 
 	left := NewPoint().Mul(sig.S, B8) // left = s * 8 * B
 	r1 := big.NewInt(8)
