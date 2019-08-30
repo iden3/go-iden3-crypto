@@ -180,11 +180,11 @@ func (k *PrivateKey) SignMimc7(msg *big.Int) *Signature {
 	r.Mod(r, SubOrder)
 	R8 := NewPoint().Mul(r, B8) // R8 = r * 8 * B
 	A := k.Public().Point()
-	hmInput, err := mimc7.BigIntsToRElems([]*big.Int{R8.X, R8.Y, A.X, A.Y, msg})
+	hmInput := []*big.Int{R8.X, R8.Y, A.X, A.Y, msg}
+	hm, err := mimc7.Hash(hmInput, nil) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
 		panic(err)
 	}
-	hm := mimc7.Hash(hmInput, nil) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	S := new(big.Int).Lsh(k.Scalar().BigInt(), 3)
 	S = S.Mul(hm, S)
 	S.Add(r, S)
@@ -196,11 +196,11 @@ func (k *PrivateKey) SignMimc7(msg *big.Int) *Signature {
 // VerifyMimc7 verifies the signature of a message encoded as a big.Int in Zq
 // using blake-512 hash for buffer hashing and mimc7 for big.Int hashing.
 func (p *PublicKey) VerifyMimc7(msg *big.Int, sig *Signature) bool {
-	hmInput, err := mimc7.BigIntsToRElems([]*big.Int{sig.R8.X, sig.R8.Y, p.X, p.Y, msg})
+	hmInput := []*big.Int{sig.R8.X, sig.R8.Y, p.X, p.Y, msg}
+	hm, err := mimc7.Hash(hmInput, nil) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
 		panic(err)
 	}
-	hm := mimc7.Hash(hmInput, nil) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 
 	left := NewPoint().Mul(sig.S, B8) // left = s * 8 * B
 	r1 := big.NewInt(8)

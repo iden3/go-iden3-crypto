@@ -2,18 +2,15 @@ package mimc7
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	_constants "github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-iden3-crypto/field"
+	"github.com/iden3/go-iden3-crypto/utils"
 )
 
 const SEED = "mimc"
-
-// RElem is a big.Int of maximum 253 bits
-type RElem *big.Int
 
 var constants = generateConstantsData()
 
@@ -45,36 +42,6 @@ func generateConstantsData() constantsData {
 	return constants
 }
 
-// BigIntToRElem checks if given big.Int fits in a Field R element, and returns the RElem type
-func BigIntToRElem(a *big.Int) (RElem, error) {
-	if a.Cmp(constants.maxFieldVal) != -1 {
-		return RElem(a), errors.New("Given big.Int don't fits in the Finite Field over R")
-	}
-	return RElem(a), nil
-}
-
-//BigIntsToRElems converts from array of *big.Int to array of RElem
-func BigIntsToRElems(arr []*big.Int) ([]RElem, error) {
-	o := make([]RElem, len(arr))
-	for i, a := range arr {
-		e, err := BigIntToRElem(a)
-		if err != nil {
-			return o, fmt.Errorf("element in position %v don't fits in Finite Field over R", i)
-		}
-		o[i] = e
-	}
-	return o, nil
-}
-
-// RElemsToBigInts converts from array of RElem to array of *big.Int
-func RElemsToBigInts(arr []RElem) []*big.Int {
-	o := make([]*big.Int, len(arr))
-	for i, a := range arr {
-		o[i] = a
-	}
-	return o
-}
-
 func getConstants(fqR field.Fq, seed string, nRounds int) []*big.Int {
 	cts := make([]*big.Int, nRounds)
 	cts[0] = big.NewInt(int64(0))
@@ -88,7 +55,7 @@ func getConstants(fqR field.Fq, seed string, nRounds int) []*big.Int {
 	return cts
 }
 
-// MIMC7HashGeneric performs the MIMC7 hash over a RElem, in a generic way, where it can be specified the Finite Field over R, and the number of rounds
+// MIMC7HashGeneric performs the MIMC7 hash over a *big.Int, in a generic way, where it can be specified the Finite Field over R, and the number of rounds
 func MIMC7HashGeneric(fqR field.Fq, xIn, k *big.Int, nRounds int) *big.Int {
 	cts := getConstants(fqR, SEED, nRounds)
 	var r *big.Int
@@ -106,9 +73,11 @@ func MIMC7HashGeneric(fqR field.Fq, xIn, k *big.Int, nRounds int) *big.Int {
 	return fqR.Affine(fqR.Add(r, k))
 }
 
-// HashGeneric performs the MIMC7 hash over a RElem array, in a generic way, where it can be specified the Finite Field over R, and the number of rounds
-func HashGeneric(iv *big.Int, arrEl []RElem, fqR field.Fq, nRounds int) (RElem, error) {
-	arr := RElemsToBigInts(arrEl)
+// HashGeneric performs the MIMC7 hash over a *big.Int array, in a generic way, where it can be specified the Finite Field over R, and the number of rounds
+func HashGeneric(iv *big.Int, arr []*big.Int, fqR field.Fq, nRounds int) (*big.Int, error) {
+	if !utils.CheckBigIntArrayInField(arr, constants.fqR.Q) {
+		return nil, errors.New("inputs values not inside Finite Field")
+	}
 	r := iv
 	var err error
 	for i := 0; i < len(arr); i++ {
@@ -117,10 +86,10 @@ func HashGeneric(iv *big.Int, arrEl []RElem, fqR field.Fq, nRounds int) (RElem, 
 			return r, err
 		}
 	}
-	return RElem(r), nil
+	return r, nil
 }
 
-// MIMC7Hash performs the MIMC7 hash over a RElem, using the Finite Field over R and the number of rounds setted in the `constants` variable
+// MIMC7Hash performs the MIMC7 hash over a *big.Int, using the Finite Field over R and the number of rounds setted in the `constants` variable
 func MIMC7Hash(xIn, k *big.Int) *big.Int {
 	var r *big.Int
 	for i := 0; i < constants.nRounds; i++ {
@@ -137,16 +106,17 @@ func MIMC7Hash(xIn, k *big.Int) *big.Int {
 	return constants.fqR.Affine(constants.fqR.Add(r, k))
 }
 
-// Hash performs the MIMC7 hash over a RElem array
-func Hash(arrEl []RElem, key *big.Int) RElem {
-	arr := RElemsToBigInts(arrEl)
+// Hash performs the MIMC7 hash over a *big.Int array
+func Hash(arr []*big.Int, key *big.Int) (*big.Int, error) {
+	if !utils.CheckBigIntArrayInField(arr, constants.fqR.Q) {
+		return nil, errors.New("inputs values not inside Finite Field")
+	}
 	var r *big.Int
 	if key == nil {
 		r = constants.fqR.Zero()
 	} else {
 		r = key
 	}
-	// r := constants.iv
 	for i := 0; i < len(arr); i++ {
 		r = constants.fqR.Add(
 			constants.fqR.Add(
@@ -155,5 +125,5 @@ func Hash(arrEl []RElem, key *big.Int) RElem {
 			),
 			MIMC7Hash(arr[i], r))
 	}
-	return RElem(r)
+	return r, nil
 }
