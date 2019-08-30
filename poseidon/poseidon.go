@@ -107,12 +107,13 @@ func ark(state []*big.Int, c *big.Int) []*big.Int {
 	return state
 }
 
-// cubic performs x^3 mod p
+// cubic performs x^5 mod p
+// https://eprint.iacr.org/2019/458.pdf page 8
 func cubic(a *big.Int) *big.Int {
 	return constants.fqR.Mul(a, constants.fqR.Square(constants.fqR.Square(a)))
 }
 
-// sbox https://eprint.iacr.org/2019/458.pdf pag.6
+// sbox https://eprint.iacr.org/2019/458.pdf page 6
 func sbox(state []*big.Int, i int) []*big.Int {
 	if (i < NROUNDSF/2) || (i >= NROUNDSF/2+NROUNDSP) {
 		for j := 0; j < T; j++ {
@@ -133,25 +134,18 @@ func mix(state []*big.Int, m [][]*big.Int) []*big.Int {
 			newState[i] = constants.fqR.Add(newState[i], constants.fqR.Mul(m[i][j], state[j]))
 		}
 	}
-	for i := 0; i < len(state); i++ {
-		state[i] = newState[i]
-	}
-	return state
+	return newState
 }
 
-// Hash computes the Poseidon hash for the given inputs
-func Hash(inp []*big.Int) (*big.Int, error) {
-	var state []*big.Int
+// PoseidonHash computes the Poseidon hash for the given inputs
+func PoseidonHash(inp []*big.Int) (*big.Int, error) {
 	if len(inp) == 0 || len(inp) > T {
 		return nil, errors.New("wrong inputs length")
 	}
 	if !utils.CheckBigIntArrayInField(inp, constants.fqR.Q) {
 		return nil, errors.New("inputs values not inside Finite Field")
 	}
-
-	for i := 0; i < len(inp); i++ {
-		state = append(state, inp[i])
-	}
+	state := inp
 	for i := len(inp); i < T; i++ {
 		state = append(state, constants.fqR.Zero())
 	}
@@ -163,4 +157,51 @@ func Hash(inp []*big.Int) (*big.Int, error) {
 		state = mix(state, constants.m)
 	}
 	return state[0], nil
+}
+
+// Hash performs the Poseidon hash over a *big.Int array
+// in chunks of 5 elements
+func Hash(arr []*big.Int) (*big.Int, error) {
+	if !utils.CheckBigIntArrayInField(arr, constants.fqR.Q) {
+		return nil, errors.New("inputs values not inside Finite Field")
+	}
+
+	r := constants.fqR.Zero()
+	for i := 0; i < len(arr); i = i + 5 {
+		var fiveElems []*big.Int
+		for j := 0; j < 5; j++ {
+			if i+j < len(arr) {
+				fiveElems = append(fiveElems, arr[i+j])
+			} else {
+				fiveElems = append(fiveElems, big.NewInt(int64(0)))
+			}
+		}
+		ph, err := PoseidonHash(fiveElems)
+		if err != nil {
+			return nil, err
+		}
+		r = constants.fqR.Add(
+			r,
+			ph)
+	}
+
+	return r, nil
+}
+
+// HashBytes hashes a msg byte slice by blocks of 31 bytes encoded as
+// little-endian
+func HashBytes(b []byte) (*big.Int, error) {
+	n := 31
+	bElems := make([]*big.Int, 0, len(b)/n+1)
+	for i := 0; i < len(b)/n; i++ {
+		v := new(big.Int)
+		utils.SetBigIntFromLEBytes(v, b[n*i:n*(i+1)])
+		bElems = append(bElems, v)
+	}
+	if len(b)%n != 0 {
+		v := new(big.Int)
+		utils.SetBigIntFromLEBytes(v, b[(len(b)/n)*n:])
+		bElems = append(bElems, v)
+	}
+	return Hash(bElems)
 }
