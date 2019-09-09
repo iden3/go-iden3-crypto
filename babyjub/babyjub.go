@@ -203,7 +203,10 @@ func (p *Point) Decompress(leBuf [32]byte) (*Point, error) {
 	xb.ModInverse(xb, constants.Q)
 	p.X.Mul(xa, xb) // xa / xb
 	p.X.Mod(p.X, constants.Q)
-	p.X.ModSqrt(p.X, constants.Q)
+	noSqrt := p.X.ModSqrt(p.X, constants.Q)
+	if noSqrt == nil {
+		return nil, fmt.Errorf("x is not a square mod q")
+	}
 	if (sign && !PointCoordSign(p.X)) || (!sign && PointCoordSign(p.X)) {
 		p.X.Mul(p.X, constants.MinusOne)
 	}
