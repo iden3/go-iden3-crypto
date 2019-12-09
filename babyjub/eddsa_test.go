@@ -25,6 +25,16 @@ func genInputs() (*PrivateKey, *big.Int) {
 	return &k, msg
 }
 
+func TestPublicKey(t *testing.T) {
+	var k PrivateKey
+	for i := 0; i < 256; i++ {
+		hex.Decode(k[:], []byte{byte(i)})
+	}
+	pk := k.Public()
+	assert.True(t, pk.X.Cmp(constants.Q) == -1)
+	assert.True(t, pk.Y.Cmp(constants.Q) == -1)
+}
+
 func TestSignVerifyMimc7(t *testing.T) {
 	var k PrivateKey
 	hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
