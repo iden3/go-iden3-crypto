@@ -141,3 +141,54 @@ func TestCompressDecompress(t *testing.T) {
 		assert.Equal(t, true, ok)
 	}
 }
+
+func BenchmarkBabyjubEddsa(b *testing.B) {
+	var k PrivateKey
+	hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	pk := k.Public()
+
+	const n = 256
+
+	msgBuf, err := hex.DecodeString("00010203040506070809")
+	if err != nil {
+		panic(err)
+	}
+	msg := utils.SetBigIntFromLEBytes(new(big.Int), msgBuf)
+	var msgs [n]*big.Int
+	for i := 0; i < n; i++ {
+		msgs[i] = new(big.Int).Add(msg, big.NewInt(int64(i)))
+	}
+	var sigs [n]*Signature
+
+	b.Run("SignMimc7", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			k.SignMimc7(msgs[i%n])
+		}
+	})
+
+	for i := 0; i < n; i++ {
+		sigs[i%n] = k.SignMimc7(msgs[i%n])
+	}
+
+	b.Run("VerifyMimc7", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			pk.VerifyMimc7(msgs[i%n], sigs[i%n])
+		}
+	})
+
+	b.Run("SignPoseidon", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			k.SignPoseidon(msgs[i%n])
+		}
+	})
+
+	for i := 0; i < n; i++ {
+		sigs[i%n] = k.SignPoseidon(msgs[i%n])
+	}
+
+	b.Run("VerifyPoseidon", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			pk.VerifyPoseidon(msgs[i%n], sigs[i%n])
+		}
+	})
+}
