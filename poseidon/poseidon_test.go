@@ -66,6 +66,16 @@ func TestPoseidon(t *testing.T) {
 	assert.Equal(t, "10747013384255785702102976082726575658403084163954725275481577373644732938016", hmsg2.String())
 }
 
+func TestPoseidonBroken(t *testing.T) {
+	h1, err := Hash([]*big.Int{big.NewInt(0), big.NewInt(1), big.NewInt(2), big.NewInt(3), big.NewInt(4),
+		big.NewInt(5), big.NewInt(6), big.NewInt(7), big.NewInt(8), big.NewInt(9)})
+	assert.Nil(t, err)
+	h2, err := Hash([]*big.Int{big.NewInt(5), big.NewInt(6), big.NewInt(7), big.NewInt(8), big.NewInt(9),
+		big.NewInt(0), big.NewInt(1), big.NewInt(2), big.NewInt(3), big.NewInt(4)})
+	assert.Nil(t, err)
+	assert.NotEqual(t, h1, h2)
+}
+
 func BenchmarkPoseidon(b *testing.B) {
 	b12 := big.NewInt(int64(12))
 	b45 := big.NewInt(int64(45))
