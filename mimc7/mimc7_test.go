@@ -91,9 +91,7 @@ func BenchmarkMIMC7(b *testing.B) {
 	b41 := big.NewInt(int64(41))
 	bigArray4 := []*big.Int{b12, b45, b78, b41}
 
-	var h4 *big.Int
 	for i := 0; i < b.N; i++ {
-		h4, _ = Hash(bigArray4, nil)
+		Hash(bigArray4, nil)
 	}
-	println(h4)
 }

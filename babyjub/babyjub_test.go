@@ -3,8 +3,10 @@ package babyjub
 import (
 	"encoding/hex"
 	"math/big"
+	"math/rand"
 	"testing"
 
+	"github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-iden3-crypto/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -230,4 +232,75 @@ func TestCompressDecompressRnd(t *testing.T) {
 		assert.Equal(t, nil, err)
 		assert.Equal(t, p1, p2)
 	}
+}
+
+func BenchmarkBabyjub(b *testing.B) {
+	const n = 256
+
+	rnd := rand.New(rand.NewSource(42))
+
+	var badpoints [n]*Point
+	for i := 0; i < n; i++ {
+		x := new(big.Int).Rand(rnd, constants.Q)
+		y := new(big.Int).Rand(rnd, constants.Q)
+		badpoints[i] = &Point{X: x, Y: y}
+	}
+
+	var points [n]*Point
+	baseX := utils.NewIntFromString(
+		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
+	baseY := utils.NewIntFromString(
+		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
+	base := &Point{X: baseX, Y: baseY}
+	for i := 0; i < n; i++ {
+		s := new(big.Int).Rand(rnd, constants.Q)
+		points[i] = NewPoint().Mul(s, base)
+	}
+
+	var scalars [n]*big.Int
+	for i := 0; i < n; i++ {
+		scalars[i] = new(big.Int).Rand(rnd, constants.Q)
+	}
+
+	b.Run("AddConst", func(b *testing.B) {
+		p0 := &Point{X: big.NewInt(0), Y: big.NewInt(1)}
+		p1 := &Point{X: big.NewInt(0), Y: big.NewInt(1)}
+
+		p2 := NewPoint()
+		for i := 0; i < b.N; i++ {
+			p2.Add(p0, p1)
+		}
+	})
+
+	b.Run("AddRnd", func(b *testing.B) {
+		res := NewPoint()
+		for i := 0; i < b.N; i++ {
+			res.Add(points[i%(n/2)], points[i%(n/2)+1])
+		}
+	})
+
+	b.Run("MulRnd", func(b *testing.B) {
+		res := NewPoint()
+		for i := 0; i < b.N; i++ {
+			res.Mul(scalars[i%n], points[i%n])
+		}
+	})
+
+	b.Run("Compress", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			points[i%n].Compress()
+		}
+	})
+
+	b.Run("InCurve", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			badpoints[i%n].InCurve()
+		}
+	})
+
+	b.Run("InSubGroup", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			points[i%n].InCurve()
+		}
+	})
 }

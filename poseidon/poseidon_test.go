@@ -65,3 +65,15 @@ func TestPoseidon(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "10747013384255785702102976082726575658403084163954725275481577373644732938016", hmsg2.String())
 }
+
+func BenchmarkPoseidon(b *testing.B) {
+	b12 := big.NewInt(int64(12))
+	b45 := big.NewInt(int64(45))
+	b78 := big.NewInt(int64(78))
+	b41 := big.NewInt(int64(41))
+	bigArray4 := []*big.Int{b12, b45, b78, b41}
+
+	for i := 0; i < b.N; i++ {
+		Hash(bigArray4)
+	}
+}
