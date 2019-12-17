@@ -168,15 +168,16 @@ func Hash(arr []*big.Int) (*big.Int, error) {
 
 	r := constants.fqR.Zero()
 	for i := 0; i < len(arr); i = i + 5 {
-		var fiveElems [5]*big.Int
+		var toHash [6]*big.Int
 		for j := 0; j < 5; j++ {
 			if i+j < len(arr) {
-				fiveElems[j] = arr[i+j]
+				toHash[j] = arr[i+j]
 			} else {
-				fiveElems[j] = _constants.Zero
+				toHash[j] = _constants.Zero
 			}
 		}
-		ph, err := PoseidonHash(fiveElems[:])
+		toHash[5] = r
+		ph, err := PoseidonHash(toHash[:])
 		if err != nil {
 			return nil, err
 		}
