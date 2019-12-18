@@ -101,7 +101,7 @@ func checkAllDifferent(v []*big.Int) bool {
 
 // ark computes Add-Round Key, from the paper https://eprint.iacr.org/2019/458.pdf
 func ark(state []*big.Int, c *big.Int) []*big.Int {
-	for i := 0; i < len(state); i++ {
+	for i := 0; i < T; i++ {
 		state[i] = constants.fqR.Add(state[i], c)
 	}
 	return state
@@ -167,16 +167,17 @@ func Hash(arr []*big.Int) (*big.Int, error) {
 	}
 
 	r := constants.fqR.Zero()
-	for i := 0; i < len(arr); i = i + 5 {
-		var fiveElems [5]*big.Int
-		for j := 0; j < 5; j++ {
+	for i := 0; i < len(arr); i = i + T - 1 {
+		var toHash [T]*big.Int
+		for j := 0; j < T-1; j++ {
 			if i+j < len(arr) {
-				fiveElems[j] = arr[i+j]
+				toHash[j] = arr[i+j]
 			} else {
-				fiveElems[j] = _constants.Zero
+				toHash[j] = _constants.Zero
 			}
 		}
-		ph, err := PoseidonHash(fiveElems[:])
+		toHash[T-1] = r
+		ph, err := PoseidonHash(toHash[:])
 		if err != nil {
 			return nil, err
 		}
