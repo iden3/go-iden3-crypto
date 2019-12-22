@@ -20,13 +20,13 @@ func TestPoseidon(t *testing.T) {
 	b2 := big.NewInt(int64(2))
 	h, err := Hash([]*big.Int{b1, b2})
 	assert.Nil(t, err)
-	assert.Equal(t, "12242166908188651009877250812424843524687801523336557272219921456462821518061", h.String())
+	assert.Equal(t, "4932297968297298434239270129193057052722409868268166443802652458940273154855", h.String())
 
 	b3 := big.NewInt(int64(3))
 	b4 := big.NewInt(int64(4))
 	h, err = Hash([]*big.Int{b3, b4})
 	assert.Nil(t, err)
-	assert.Equal(t, "17185195740979599334254027721507328033796809509313949281114643312710535000993", h.String())
+	assert.Equal(t, "4635491972858758537477743930622086396911540895966845494943021655521913507504", h.String())
 
 	msg := []byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.")
 	n := 31
@@ -43,7 +43,7 @@ func TestPoseidon(t *testing.T) {
 	}
 	hmsg, err := Hash(msgElems)
 	assert.Nil(t, err)
-	assert.Equal(t, "19204466598658860237115179437116112945222240370078952939676636700594938553268", hmsg.String())
+	assert.Equal(t, "16019700159595764790637132363672701294192939959594423814006267756172551741065", hmsg.String())
 
 	msg2 := []byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet.")
 	msg2Elems := make([]*big.Int, 0, len(msg2)/n+1)
@@ -59,11 +59,11 @@ func TestPoseidon(t *testing.T) {
 	}
 	hmsg2, err := Hash(msg2Elems)
 	assert.Nil(t, err)
-	assert.Equal(t, "11846976426841208067103690249139614816718727366915557488657094868020932500524", hmsg2.String())
+	assert.Equal(t, "2978613163687734485261639854325792381691890647104372645321246092227111432722", hmsg2.String())
 
 	hmsg2, err = HashBytes(msg2)
 	assert.Nil(t, err)
-	assert.Equal(t, "11846976426841208067103690249139614816718727366915557488657094868020932500524", hmsg2.String())
+	assert.Equal(t, "2978613163687734485261639854325792381691890647104372645321246092227111432722", hmsg2.String())
 }
 
 func TestPoseidonBrokenChunks(t *testing.T) {

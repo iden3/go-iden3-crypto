@@ -6,8 +6,7 @@ import (
 	"math/big"
 	"strconv"
 
-	_constants "github.com/iden3/go-iden3-crypto/constants"
-	"github.com/iden3/go-iden3-crypto/field"
+	"github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-iden3-crypto/utils"
 	"golang.org/x/crypto/blake2b"
 )
@@ -17,23 +16,20 @@ const NROUNDSF = 8
 const NROUNDSP = 57
 const T = 6
 
-var constants = generateConstantsData()
+var constC []*big.Int
+var constM [T][T]*big.Int
 
-type constantsData struct {
-	fqR field.Fq
-	c   []*big.Int
-	m   [][]*big.Int
+func Zero() *big.Int {
+	return new(big.Int)
 }
 
-func generateConstantsData() constantsData {
-	var constants constantsData
+func modQ(v *big.Int) {
+	v.Mod(v, constants.Q)
+}
 
-	fqR := field.NewFq(_constants.Q)
-	constants.fqR = fqR
-	constants.c = getPseudoRandom(fqR, SEED+"_constants", NROUNDSF+NROUNDSP)
-	constants.m = getMDS(fqR)
-
-	return constants
+func init() {
+	constC = getPseudoRandom(SEED+"_constants", NROUNDSF+NROUNDSP)
+	constM = getMDS()
 }
 
 func leByteArrayToBigInt(b []byte) *big.Int {
@@ -45,14 +41,13 @@ func leByteArrayToBigInt(b []byte) *big.Int {
 	return res
 }
 
-func getPseudoRandom(fqR field.Fq, seed string, n int) []*big.Int {
-	var res []*big.Int
+func getPseudoRandom(seed string, n int) []*big.Int {
+	res := make([]*big.Int, n)
 	hash := blake2b.Sum256([]byte(seed))
-	for len(res) < n {
-		hashBigInt := new(big.Int)
-		newN := fqR.Affine(utils.SetBigIntFromLEBytes(hashBigInt, hash[:]))
-		// newN := fqR.Affine(leByteArrayToBigInt(hash[:]))
-		res = append(res, newN)
+	for i := 0; i < n; i++ {
+		hashBigInt := Zero()
+		res[i] = utils.SetBigIntFromLEBytes(hashBigInt, hash[:])
+		modQ(res[i])
 		hash = blake2b.Sum256(hash[:])
 	}
 	return res
@@ -67,20 +62,20 @@ func nonceToString(n int) string {
 }
 
 // https://eprint.iacr.org/2019/458.pdf pag.8
-func getMDS(fqR field.Fq) [][]*big.Int {
+func getMDS() [T][T]*big.Int {
 	nonce := 0
-	cauchyMatrix := getPseudoRandom(fqR, SEED+"_matrix_"+nonceToString(nonce), T*2)
+	cauchyMatrix := getPseudoRandom(SEED+"_matrix_"+nonceToString(nonce), T*2)
 	for !checkAllDifferent(cauchyMatrix) {
 		nonce += 1
-		cauchyMatrix = getPseudoRandom(fqR, SEED+"_matrix_"+nonceToString(nonce), T*2)
+		cauchyMatrix = getPseudoRandom(SEED+"_matrix_"+nonceToString(nonce), T*2)
 	}
-	var m [][]*big.Int
+	var m [T][T]*big.Int
 	for i := 0; i < T; i++ {
-		var mi []*big.Int
+		// var mi []*big.Int
 		for j := 0; j < T; j++ {
-			mi = append(mi, fqR.Inverse(fqR.Sub(cauchyMatrix[i], cauchyMatrix[T+j])))
+			m[i][j] = new(big.Int).Sub(cauchyMatrix[i], cauchyMatrix[T+j])
+			m[i][j].ModInverse(m[i][j], constants.Q)
 		}
-		m = append(m, mi)
 	}
 	return m
 }
@@ -100,61 +95,64 @@ func checkAllDifferent(v []*big.Int) bool {
 }
 
 // ark computes Add-Round Key, from the paper https://eprint.iacr.org/2019/458.pdf
-func ark(state []*big.Int, c *big.Int) []*big.Int {
+func ark(state [T]*big.Int, c *big.Int) {
 	for i := 0; i < T; i++ {
-		state[i] = constants.fqR.Add(state[i], c)
+		modQ(state[i].Add(state[i], c))
 	}
-	return state
 }
 
 // cubic performs x^5 mod p
 // https://eprint.iacr.org/2019/458.pdf page 8
-func cubic(a *big.Int) *big.Int {
-	return constants.fqR.Mul(a, constants.fqR.Square(constants.fqR.Square(a)))
+var five = big.NewInt(5)
+
+func cubic(a *big.Int) {
+	a.Exp(a, five, constants.Q)
 }
 
 // sbox https://eprint.iacr.org/2019/458.pdf page 6
-func sbox(state []*big.Int, i int) []*big.Int {
+func sbox(state [T]*big.Int, i int) {
 	if (i < NROUNDSF/2) || (i >= NROUNDSF/2+NROUNDSP) {
 		for j := 0; j < T; j++ {
-			state[j] = cubic(state[j])
+			cubic(state[j])
 		}
 	} else {
-		state[0] = cubic(state[0])
+		cubic(state[0])
 	}
-	return state
 }
 
 // mix returns [[matrix]] * [vector]
-func mix(state []*big.Int, m [][]*big.Int) []*big.Int {
-	var newState []*big.Int
-	for i := 0; i < len(state); i++ {
-		newState = append(newState, constants.fqR.Zero())
-		for j := 0; j < len(state); j++ {
-			newState[i] = constants.fqR.Add(newState[i], constants.fqR.Mul(m[i][j], state[j]))
+func mix(state [T]*big.Int, newState [T]*big.Int, m [T][T]*big.Int) {
+	mul := Zero()
+	for i := 0; i < T; i++ {
+		newState[i].SetInt64(0)
+		for j := 0; j < T; j++ {
+			modQ(mul.Mul(m[i][j], state[j]))
+			newState[i].Add(newState[i], mul)
 		}
+		modQ(newState[i])
 	}
-	return newState
 }
 
 // PoseidonHash computes the Poseidon hash for the given inputs
-func PoseidonHash(inp []*big.Int) (*big.Int, error) {
-	if len(inp) == 0 || len(inp) > T {
-		return nil, errors.New("wrong inputs length")
-	}
-	if !utils.CheckBigIntArrayInField(inp, constants.fqR.Q) {
+func PoseidonHash(inp [T]*big.Int) (*big.Int, error) {
+	if !utils.CheckBigIntArrayInField(inp[:], constants.Q) {
 		return nil, errors.New("inputs values not inside Finite Field")
 	}
-	state := inp
-	for i := len(inp); i < T; i++ {
-		state = append(state, constants.fqR.Zero())
+	state := [T]*big.Int{}
+	for i := 0; i < T; i++ {
+		state[i] = new(big.Int).Set(inp[i])
 	}
 
 	// ARK --> SBox --> M, https://eprint.iacr.org/2019/458.pdf pag.5
+	var newState [T]*big.Int
+	for i := 0; i < T; i++ {
+		newState[i] = Zero()
+	}
 	for i := 0; i < NROUNDSF+NROUNDSP; i++ {
-		state = ark(state, constants.c[i])
-		state = sbox(state, i)
-		state = mix(state, constants.m)
+		ark(state, constC[i])
+		sbox(state, i)
+		mix(state, newState, constM)
+		state, newState = newState, state
 	}
 	return state[0], nil
 }
@@ -162,28 +160,31 @@ func PoseidonHash(inp []*big.Int) (*big.Int, error) {
 // Hash performs the Poseidon hash over a *big.Int array
 // in chunks of 5 elements
 func Hash(arr []*big.Int) (*big.Int, error) {
-	if !utils.CheckBigIntArrayInField(arr, constants.fqR.Q) {
+	if !utils.CheckBigIntArrayInField(arr, constants.Q) {
 		return nil, errors.New("inputs values not inside Finite Field")
 	}
 
-	r := constants.fqR.Zero()
+	r := big.NewInt(1)
 	for i := 0; i < len(arr); i = i + T - 1 {
 		var toHash [T]*big.Int
-		for j := 0; j < T-1; j++ {
-			if i+j < len(arr) {
-				toHash[j] = arr[i+j]
-			} else {
-				toHash[j] = _constants.Zero
+		j := 0
+		for ; j < T-1; j++ {
+			if i+j >= len(arr) {
+				break
 			}
+			toHash[j] = arr[i+j]
 		}
-		toHash[T-1] = r
-		ph, err := PoseidonHash(toHash[:])
+		toHash[j] = r
+		j++
+		for ; j < T; j++ {
+			toHash[j] = constants.Zero
+		}
+
+		ph, err := PoseidonHash(toHash)
 		if err != nil {
 			return nil, err
 		}
-		r = constants.fqR.Add(
-			r,
-			ph)
+		modQ(r.Add(r, ph))
 	}
 
 	return r, nil
@@ -195,12 +196,12 @@ func HashBytes(b []byte) (*big.Int, error) {
 	n := 31
 	bElems := make([]*big.Int, 0, len(b)/n+1)
 	for i := 0; i < len(b)/n; i++ {
-		v := new(big.Int)
+		v := Zero()
 		utils.SetBigIntFromLEBytes(v, b[n*i:n*(i+1)])
 		bElems = append(bElems, v)
 	}
 	if len(b)%n != 0 {
-		v := new(big.Int)
+		v := Zero()
 		utils.SetBigIntFromLEBytes(v, b[(len(b)/n)*n:])
 		bElems = append(bElems, v)
 	}
