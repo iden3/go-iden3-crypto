@@ -104,7 +104,7 @@ func TestSignVerifyPoseidon(t *testing.T) {
 		"15383486972088797283337779941324724402501462225528836549661220478783371668959",
 		sig.R8.Y.String())
 	assert.Equal(t,
-		"707916534780195227251279867700047344876009454172122484896943904789217159950",
+		"248298168863866362217836334079793350221620631973732197668910946177382043688",
 		sig.S.String())
 
 	ok := pk.VerifyPoseidon(msg, sig)
@@ -116,7 +116,7 @@ func TestSignVerifyPoseidon(t *testing.T) {
 
 	assert.Equal(t, ""+
 		"dfedb4315d3f2eb4de2d3c510d7a987dcab67089c8ace06308827bf5bcbe02a2"+
-		"0e2b947dfc400d2e9c78b5b625fd36dee8dbcfddc9a0baa6514f59a6a3aa9001",
+		"28506bce274aa1b3f7e7c2fd7e4fe09bff8f9aa37a42def7994e98f322888c00",
 		hex.EncodeToString(sigBuf[:]))
 
 	ok = pk.VerifyPoseidon(msg, sig2)
