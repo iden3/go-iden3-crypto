@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-iden3-crypto/ff"
 	"github.com/iden3/go-iden3-crypto/utils"
 	"golang.org/x/crypto/blake2b"
@@ -19,7 +20,11 @@ var constC []*ff.Element
 var constM [T][T]*ff.Element
 
 func Zero() *ff.Element {
-	return utils.NewElement().SetZero()
+	return ff.NewElement().SetZero()
+}
+
+func modQ(v *big.Int) {
+	v.Mod(v, constants.Q)
 }
 
 func init() {
@@ -32,7 +37,7 @@ func getPseudoRandom(seed string, n int) []*ff.Element {
 	hash := blake2b.Sum256([]byte(seed))
 	for i := 0; i < n; i++ {
 		hashBigInt := big.NewInt(int64(0))
-		res[i] = utils.NewElement().SetBigInt(utils.SetBigIntFromLEBytes(hashBigInt, hash[:]))
+		res[i] = ff.NewElement().SetBigInt(utils.SetBigIntFromLEBytes(hashBigInt, hash[:]))
 		hash = blake2b.Sum256(hash[:])
 	}
 	return res
@@ -57,7 +62,7 @@ func getMDS() [T][T]*ff.Element {
 	var m [T][T]*ff.Element
 	for i := 0; i < T; i++ {
 		for j := 0; j < T; j++ {
-			m[i][j] = utils.NewElement().Sub(cauchyMatrix[i], cauchyMatrix[T+j])
+			m[i][j] = ff.NewElement().Sub(cauchyMatrix[i], cauchyMatrix[T+j])
 			m[i][j].Inverse(m[i][j])
 		}
 	}
@@ -66,7 +71,7 @@ func getMDS() [T][T]*ff.Element {
 
 func checkAllDifferent(v []*ff.Element) bool {
 	for i := 0; i < len(v); i++ {
-		if v[i].Equal(utils.NewElement().SetZero()) {
+		if v[i].Equal(ff.NewElement().SetZero()) {
 			return false
 		}
 		for j := i + 1; j < len(v); j++ {
@@ -117,13 +122,14 @@ func mix(state [T]*ff.Element, newState [T]*ff.Element, m [T][T]*ff.Element) {
 }
 
 // PoseidonHash computes the Poseidon hash for the given inputs
-func PoseidonHash(inp [T]*ff.Element) (*ff.Element, error) {
-	if !utils.CheckElementArrayInField(inp[:]) {
+func PoseidonHash(inpBI [T]*big.Int) (*big.Int, error) {
+	if !utils.CheckBigIntArrayInField(inpBI[:]) {
 		return nil, errors.New("inputs values not inside Finite Field")
 	}
+	inp := utils.BigIntArrayToElementArray(inpBI[:])
 	state := [T]*ff.Element{}
 	for i := 0; i < T; i++ {
-		state[i] = utils.NewElement().Set(inp[i])
+		state[i] = ff.NewElement().Set(inp[i])
 	}
 
 	// ARK --> SBox --> M, https://eprint.iacr.org/2019/458.pdf pag.5
@@ -137,19 +143,18 @@ func PoseidonHash(inp [T]*ff.Element) (*ff.Element, error) {
 		mix(state, newState, constM)
 		state, newState = newState, state
 	}
-	return state[0], nil
+	rE := state[0]
+	r := big.NewInt(0)
+	rE.ToBigIntRegular(r)
+	return r, nil
 }
 
 // Hash performs the Poseidon hash over a ff.Element array
 // in chunks of 5 elements
-func Hash(arr []*ff.Element) (*ff.Element, error) {
-	if !utils.CheckElementArrayInField(arr) {
-		return nil, errors.New("inputs values not inside Finite Field")
-	}
-
-	r := utils.NewElement().SetOne()
+func Hash(arr []*big.Int) (*big.Int, error) {
+	r := big.NewInt(int64(1))
 	for i := 0; i < len(arr); i = i + T - 1 {
-		var toHash [T]*ff.Element
+		var toHash [T]*big.Int
 		j := 0
 		for ; j < T-1; j++ {
 			if i+j >= len(arr) {
@@ -160,14 +165,14 @@ func Hash(arr []*ff.Element) (*ff.Element, error) {
 		toHash[j] = r
 		j++
 		for ; j < T; j++ {
-			toHash[j] = Zero()
+			toHash[j] = big.NewInt(0)
 		}
 
 		ph, err := PoseidonHash(toHash)
 		if err != nil {
 			return nil, err
 		}
-		r.Add(r, ph)
+		modQ(r.Add(r, ph))
 	}
 
 	return r, nil
@@ -175,19 +180,19 @@ func Hash(arr []*ff.Element) (*ff.Element, error) {
 
 // HashBytes hashes a msg byte slice by blocks of 31 bytes encoded as
 // little-endian
-func HashBytes(b []byte) (*ff.Element, error) {
+func HashBytes(b []byte) (*big.Int, error) {
 	n := 31
-	bElems := make([]*ff.Element, 0, len(b)/n+1)
+	bElems := make([]*big.Int, 0, len(b)/n+1)
 	for i := 0; i < len(b)/n; i++ {
 		v := big.NewInt(int64(0))
 		utils.SetBigIntFromLEBytes(v, b[n*i:n*(i+1)])
-		bElems = append(bElems, utils.NewElement().SetBigInt(v))
+		bElems = append(bElems, v)
 
 	}
 	if len(b)%n != 0 {
 		v := big.NewInt(int64(0))
 		utils.SetBigIntFromLEBytes(v, b[(len(b)/n)*n:])
-		bElems = append(bElems, utils.NewElement().SetBigInt(v))
+		bElems = append(bElems, v)
 	}
 	return Hash(bElems)
 }

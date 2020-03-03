@@ -108,18 +108,10 @@ func CheckBigIntArrayInField(arr []*big.Int) bool {
 	return true
 }
 
-// CheckElementArrayInField checks if given *ff.Element fits in a Field Q element
-func CheckElementArrayInField(arr []*ff.Element) bool {
-	for _, aE := range arr {
-		a := big.NewInt(0)
-		aE.ToBigIntRegular(a)
-		if !CheckBigIntInField(a) {
-			return false
-		}
+func BigIntArrayToElementArray(bi []*big.Int) []*ff.Element {
+	var o []*ff.Element
+	for i := range bi {
+		o = append(o, ff.NewElement().SetBigInt(bi[i]))
 	}
-	return true
-}
-
-func NewElement() *ff.Element {
-	return &ff.Element{0, 0, 0, 0}
+	return o
 }
