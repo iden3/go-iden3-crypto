@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+
+	"github.com/iden3/go-iden3-crypto/constants"
+	"github.com/iden3/go-iden3-crypto/ff"
 )
 
 // NewIntFromString creates a new big.Int from a decimal integer encoded as a
@@ -87,20 +90,36 @@ func HexDecodeInto(dst []byte, h []byte) error {
 	return nil
 }
 
-// CheckBigIntInField checks if given big.Int fits in a Field Q element
-func CheckBigIntInField(a *big.Int, q *big.Int) bool {
-	if a.Cmp(q) != -1 {
+// CheckBigIntInField checks if given *big.Int fits in a Field Q element
+func CheckBigIntInField(a *big.Int) bool {
+	if a.Cmp(constants.Q) != -1 {
 		return false
 	}
 	return true
 }
 
-// CheckBigIntArrayInField checks if given big.Int fits in a Field Q element
-func CheckBigIntArrayInField(arr []*big.Int, q *big.Int) bool {
+// CheckBigIntArrayInField checks if given *big.Int fits in a Field Q element
+func CheckBigIntArrayInField(arr []*big.Int) bool {
 	for _, a := range arr {
-		if !CheckBigIntInField(a, q) {
+		if !CheckBigIntInField(a) {
 			return false
 		}
 	}
 	return true
+}
+
+// CheckElementArrayInField checks if given *ff.Element fits in a Field Q element
+func CheckElementArrayInField(arr []*ff.Element) bool {
+	for _, aE := range arr {
+		a := big.NewInt(0)
+		aE.ToBigIntRegular(a)
+		if !CheckBigIntInField(a) {
+			return false
+		}
+	}
+	return true
+}
+
+func NewElement() *ff.Element {
+	return &ff.Element{0, 0, 0, 0}
 }

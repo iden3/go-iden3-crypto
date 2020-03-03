@@ -3,6 +3,7 @@ package babyjub
 import (
 	"crypto/rand"
 
+	"github.com/iden3/go-iden3-crypto/ff"
 	"github.com/iden3/go-iden3-crypto/mimc7"
 	"github.com/iden3/go-iden3-crypto/poseidon"
 	"github.com/iden3/go-iden3-crypto/utils"
@@ -222,11 +223,18 @@ func (k *PrivateKey) SignPoseidon(msg *big.Int) *Signature {
 	r.Mod(r, SubOrder)
 	R8 := NewPoint().Mul(r, B8) // R8 = r * 8 * B
 	A := k.Public().Point()
-	hmInput := []*big.Int{R8.X, R8.Y, A.X, A.Y, msg}
-	hm, err := poseidon.Hash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
+	hmInput := []*ff.Element{
+		utils.NewElement().SetBigInt(R8.X),
+		utils.NewElement().SetBigInt(R8.Y),
+		utils.NewElement().SetBigInt(A.X),
+		utils.NewElement().SetBigInt(A.Y),
+		utils.NewElement().SetBigInt(msg)}
+	hmElement, err := poseidon.Hash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
 		panic(err)
 	}
+	hm := big.NewInt(0)
+	hmElement.ToBigIntRegular(hm)
 	S := new(big.Int).Lsh(k.Scalar().BigInt(), 3)
 	S = S.Mul(hm, S)
 	S.Add(r, S)
@@ -238,11 +246,18 @@ func (k *PrivateKey) SignPoseidon(msg *big.Int) *Signature {
 // VerifyPoseidon verifies the signature of a message encoded as a big.Int in Zq
 // using blake-512 hash for buffer hashing and Poseidon for big.Int hashing.
 func (p *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
-	hmInput := []*big.Int{sig.R8.X, sig.R8.Y, p.X, p.Y, msg}
-	hm, err := poseidon.Hash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
+	hmInput := []*ff.Element{
+		utils.NewElement().SetBigInt(sig.R8.X),
+		utils.NewElement().SetBigInt(sig.R8.Y),
+		utils.NewElement().SetBigInt(p.X),
+		utils.NewElement().SetBigInt(p.Y),
+		utils.NewElement().SetBigInt(msg)}
+	hmElement, err := poseidon.Hash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
 		panic(err)
 	}
+	hm := big.NewInt(0)
+	hmElement.ToBigIntRegular(hm)
 
 	left := NewPoint().Mul(sig.S, B8) // left = s * 8 * B
 	r1 := big.NewInt(8)
