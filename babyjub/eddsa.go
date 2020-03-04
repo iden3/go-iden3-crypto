@@ -222,11 +222,13 @@ func (k *PrivateKey) SignPoseidon(msg *big.Int) *Signature {
 	r.Mod(r, SubOrder)
 	R8 := NewPoint().Mul(r, B8) // R8 = r * 8 * B
 	A := k.Public().Point()
+
 	hmInput := [poseidon.T]*big.Int{R8.X, R8.Y, A.X, A.Y, msg, big.NewInt(int64(0))}
 	hm, err := poseidon.PoseidonHash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
 		panic(err)
 	}
+
 	S := new(big.Int).Lsh(k.Scalar().BigInt(), 3)
 	S = S.Mul(hm, S)
 	S.Add(r, S)

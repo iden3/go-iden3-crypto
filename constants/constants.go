@@ -1,12 +1,15 @@
 package constants
 
 import (
-	"github.com/iden3/go-iden3-crypto/utils"
+	"fmt"
 	"math/big"
+
+	"github.com/iden3/go-iden3-crypto/ff"
 )
 
 // Q is the order of the integer field (Zq) that fits inside the SNARK.
 var Q *big.Int
+var QE *ff.Element
 
 // Zero is 0.
 var Zero *big.Int
@@ -21,6 +24,11 @@ func init() {
 	Zero = big.NewInt(0)
 	One = big.NewInt(1)
 	MinusOne = big.NewInt(-1)
-	Q = utils.NewIntFromString(
-		"21888242871839275222246405745257275088548364400416034343698204186575808495617")
+
+	qString := "21888242871839275222246405745257275088548364400416034343698204186575808495617"
+	var ok bool
+	Q, ok = new(big.Int).SetString(qString, 10)
+	if !ok {
+		panic(fmt.Sprintf("Bad base 10 string %s", qString))
+	}
 }

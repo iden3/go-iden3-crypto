@@ -75,7 +75,7 @@ func MIMC7HashGeneric(fqR field.Fq, xIn, k *big.Int, nRounds int) *big.Int {
 
 // HashGeneric performs the MIMC7 hash over a *big.Int array, in a generic way, where it can be specified the Finite Field over R, and the number of rounds
 func HashGeneric(iv *big.Int, arr []*big.Int, fqR field.Fq, nRounds int) (*big.Int, error) {
-	if !utils.CheckBigIntArrayInField(arr, constants.fqR.Q) {
+	if !utils.CheckBigIntArrayInField(arr) {
 		return nil, errors.New("inputs values not inside Finite Field")
 	}
 	r := iv
@@ -108,7 +108,7 @@ func MIMC7Hash(xIn, k *big.Int) *big.Int {
 
 // Hash performs the MIMC7 hash over a *big.Int array
 func Hash(arr []*big.Int, key *big.Int) (*big.Int, error) {
-	if !utils.CheckBigIntArrayInField(arr, constants.fqR.Q) {
+	if !utils.CheckBigIntArrayInField(arr) {
 		return nil, errors.New("inputs values not inside Finite Field")
 	}
 	var r *big.Int
