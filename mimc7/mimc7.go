@@ -6,7 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/crypto"
 	_constants "github.com/iden3/go-iden3-crypto/constants"
-	"github.com/iden3/go-iden3-crypto/field"
+	"github.com/iden3/go-iden3-crypto/ff"
 	"github.com/iden3/go-iden3-crypto/utils"
 )
 
@@ -15,73 +15,72 @@ const SEED = "mimc"
 var constants = generateConstantsData()
 
 type constantsData struct {
-	maxFieldVal *big.Int
-	seedHash    *big.Int
-	iv          *big.Int
-	fqR         field.Fq
-	nRounds     int
-	cts         []*big.Int
+	seedHash *big.Int
+	iv       *big.Int
+	nRounds  int
+	cts      []*ff.Element
 }
 
 func generateConstantsData() constantsData {
 	var constants constantsData
 
-	fqR := field.NewFq(_constants.Q)
-	constants.fqR = fqR
-
-	// maxFieldVal is the R value of the Finite Field
-	constants.maxFieldVal = constants.fqR.Q
-
 	constants.seedHash = new(big.Int).SetBytes(crypto.Keccak256([]byte(SEED)))
 	c := new(big.Int).SetBytes(crypto.Keccak256([]byte(SEED + "_iv")))
-	constants.iv = new(big.Int).Mod(c, constants.maxFieldVal)
+	constants.iv = new(big.Int).Mod(c, _constants.Q)
 
 	constants.nRounds = 91
-	cts := getConstants(constants.fqR, SEED, constants.nRounds)
+	cts := getConstants(SEED, constants.nRounds)
 	constants.cts = cts
 	return constants
 }
 
-func getConstants(fqR field.Fq, seed string, nRounds int) []*big.Int {
-	cts := make([]*big.Int, nRounds)
-	cts[0] = big.NewInt(int64(0))
+func getConstants(seed string, nRounds int) []*ff.Element {
+	cts := make([]*ff.Element, nRounds)
+	cts[0] = ff.NewElement().SetZero()
 	c := new(big.Int).SetBytes(crypto.Keccak256([]byte(SEED)))
 	for i := 1; i < nRounds; i++ {
 		c = new(big.Int).SetBytes(crypto.Keccak256(c.Bytes()))
 
-		n := fqR.Affine(c)
-		cts[i] = n
+		n := new(big.Int).Mod(c, _constants.Q)
+		cts[i] = ff.NewElement().SetBigInt(n)
 	}
 	return cts
 }
 
 // MIMC7HashGeneric performs the MIMC7 hash over a *big.Int, in a generic way, where it can be specified the Finite Field over R, and the number of rounds
-func MIMC7HashGeneric(fqR field.Fq, xIn, k *big.Int, nRounds int) *big.Int {
-	cts := getConstants(fqR, SEED, nRounds)
-	var r *big.Int
+func MIMC7HashGeneric(xInBI, kBI *big.Int, nRounds int) *big.Int {
+	xIn := ff.NewElement().SetBigInt(xInBI)
+	k := ff.NewElement().SetBigInt(kBI)
+
+	cts := getConstants(SEED, nRounds)
+	var r *ff.Element
 	for i := 0; i < nRounds; i++ {
-		var t *big.Int
+		var t *ff.Element
 		if i == 0 {
-			t = fqR.Add(xIn, k)
+			t = ff.NewElement().Add(xIn, k)
 		} else {
-			t = fqR.Add(fqR.Add(r, k), cts[i])
+			t = ff.NewElement().Add(ff.NewElement().Add(r, k), cts[i])
 		}
-		t2 := fqR.Square(t)
-		t4 := fqR.Square(t2)
-		r = fqR.Mul(fqR.Mul(t4, t2), t)
+		t2 := ff.NewElement().Square(t)
+		t4 := ff.NewElement().Square(t2)
+		r = ff.NewElement().Mul(ff.NewElement().Mul(t4, t2), t)
 	}
-	return fqR.Affine(fqR.Add(r, k))
+	rE := ff.NewElement().Add(r, k)
+
+	res := big.NewInt(0)
+	rE.ToBigIntRegular(res)
+	return res
 }
 
 // HashGeneric performs the MIMC7 hash over a *big.Int array, in a generic way, where it can be specified the Finite Field over R, and the number of rounds
-func HashGeneric(iv *big.Int, arr []*big.Int, fqR field.Fq, nRounds int) (*big.Int, error) {
+func HashGeneric(iv *big.Int, arr []*big.Int, nRounds int) (*big.Int, error) {
 	if !utils.CheckBigIntArrayInField(arr) {
 		return nil, errors.New("inputs values not inside Finite Field")
 	}
 	r := iv
 	var err error
 	for i := 0; i < len(arr); i++ {
-		r = MIMC7HashGeneric(fqR, r, arr[i], nRounds)
+		r = MIMC7HashGeneric(r, arr[i], nRounds)
 		if err != nil {
 			return r, err
 		}
@@ -90,20 +89,27 @@ func HashGeneric(iv *big.Int, arr []*big.Int, fqR field.Fq, nRounds int) (*big.I
 }
 
 // MIMC7Hash performs the MIMC7 hash over a *big.Int, using the Finite Field over R and the number of rounds setted in the `constants` variable
-func MIMC7Hash(xIn, k *big.Int) *big.Int {
-	var r *big.Int
+func MIMC7Hash(xInBI, kBI *big.Int) *big.Int {
+	xIn := ff.NewElement().SetBigInt(xInBI)
+	k := ff.NewElement().SetBigInt(kBI)
+
+	var r *ff.Element
 	for i := 0; i < constants.nRounds; i++ {
-		var t *big.Int
+		var t *ff.Element
 		if i == 0 {
-			t = constants.fqR.Add(xIn, k)
+			t = ff.NewElement().Add(xIn, k)
 		} else {
-			t = constants.fqR.Add(constants.fqR.Add(r, k), constants.cts[i])
+			t = ff.NewElement().Add(ff.NewElement().Add(r, k), constants.cts[i])
 		}
-		t2 := constants.fqR.Square(t)
-		t4 := constants.fqR.Square(t2)
-		r = constants.fqR.Mul(constants.fqR.Mul(t4, t2), t)
+		t2 := ff.NewElement().Square(t)
+		t4 := ff.NewElement().Square(t2)
+		r = ff.NewElement().Mul(ff.NewElement().Mul(t4, t2), t)
 	}
-	return constants.fqR.Affine(constants.fqR.Add(r, k))
+	rE := ff.NewElement().Add(r, k)
+
+	res := big.NewInt(0)
+	rE.ToBigIntRegular(res)
+	return res
 }
 
 // Hash performs the MIMC7 hash over a *big.Int array
@@ -113,17 +119,18 @@ func Hash(arr []*big.Int, key *big.Int) (*big.Int, error) {
 	}
 	var r *big.Int
 	if key == nil {
-		r = constants.fqR.Zero()
+		r = big.NewInt(0)
 	} else {
 		r = key
 	}
 	for i := 0; i < len(arr); i++ {
-		r = constants.fqR.Add(
-			constants.fqR.Add(
+		r = new(big.Int).Add(
+			new(big.Int).Add(
 				r,
 				arr[i],
 			),
 			MIMC7Hash(arr[i], r))
+		r = new(big.Int).Mod(r, _constants.Q)
 	}
 	return r, nil
 }

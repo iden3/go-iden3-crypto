@@ -92,7 +92,6 @@ func ark(state [T]*ff.Element, c *ff.Element) {
 
 // cubic performs x^5 mod p
 // https://eprint.iacr.org/2019/458.pdf page 8
-// var five = big.NewInt(5)
 
 func cubic(a *ff.Element) {
 	a.Exp(*a, 5)
