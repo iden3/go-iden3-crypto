@@ -36,7 +36,7 @@ func generateConstantsData() constantsData {
 
 func getConstants(seed string, nRounds int) []*ff.Element {
 	cts := make([]*ff.Element, nRounds)
-	cts[0] = ff.NewElement().SetZero()
+	cts[0] = ff.NewElement()
 	c := new(big.Int).SetBytes(crypto.Keccak256([]byte(SEED)))
 	for i := 1; i < nRounds; i++ {
 		c = new(big.Int).SetBytes(crypto.Keccak256(c.Bytes()))

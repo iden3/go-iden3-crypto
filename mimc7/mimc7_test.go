@@ -21,9 +21,6 @@ func TestMIMC7Generic(t *testing.T) {
 	b2 := big.NewInt(int64(2))
 	b3 := big.NewInt(int64(3))
 
-	// r, ok := new(big.Int).SetString("21888242871839275222246405745257275088548364400416034343698204186575808495617", 10)
-	// assert.True(t, ok)
-
 	bigArray := []*big.Int{b1, b2, b3}
 
 	// Generic Hash

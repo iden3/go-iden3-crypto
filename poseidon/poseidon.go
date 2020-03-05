@@ -20,7 +20,7 @@ var constC []*ff.Element
 var constM [T][T]*ff.Element
 
 func Zero() *ff.Element {
-	return ff.NewElement().SetZero()
+	return ff.NewElement()
 }
 
 func modQ(v *big.Int) {
@@ -71,7 +71,7 @@ func getMDS() [T][T]*ff.Element {
 
 func checkAllDifferent(v []*ff.Element) bool {
 	for i := 0; i < len(v); i++ {
-		if v[i].Equal(ff.NewElement().SetZero()) {
+		if v[i].Equal(ff.NewElement()) {
 			return false
 		}
 		for j := i + 1; j < len(v); j++ {
