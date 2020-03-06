@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/iden3/go-iden3-crypto/field"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,16 +21,12 @@ func TestMIMC7Generic(t *testing.T) {
 	b2 := big.NewInt(int64(2))
 	b3 := big.NewInt(int64(3))
 
-	r, ok := new(big.Int).SetString("21888242871839275222246405745257275088548364400416034343698204186575808495617", 10)
-	assert.True(t, ok)
-	fqR := field.NewFq(r)
-
 	bigArray := []*big.Int{b1, b2, b3}
 
 	// Generic Hash
-	mhg := MIMC7HashGeneric(fqR, b1, b2, 91)
+	mhg := MIMC7HashGeneric(b1, b2, 91)
 	assert.Equal(t, "10594780656576967754230020536574539122676596303354946869887184401991294982664", mhg.String())
-	hg, err := HashGeneric(fqR.Zero(), bigArray, fqR, 91)
+	hg, err := HashGeneric(big.NewInt(0), bigArray, 91)
 	assert.Nil(t, err)
 	assert.Equal(t, "6464402164086696096195815557694604139393321133243036833927490113253119343397", (*big.Int)(hg).String())
 }
