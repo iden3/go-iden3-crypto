@@ -7,13 +7,21 @@ import (
 	"testing"
 
 	"github.com/iden3/go-iden3-crypto/constants"
+	"github.com/iden3/go-iden3-crypto/ff"
 	"github.com/iden3/go-iden3-crypto/utils"
 	"github.com/stretchr/testify/assert"
 )
 
+func zero() *ff.Element {
+	return ff.NewElement().SetZero()
+}
+func one() *ff.Element {
+	return ff.NewElement().SetOne()
+}
+
 func TestAdd1(t *testing.T) {
-	a := &Point{X: big.NewInt(0), Y: big.NewInt(1)}
-	b := &Point{X: big.NewInt(0), Y: big.NewInt(1)}
+	a := &Point{X: zero(), Y: one()}
+	b := &Point{X: zero(), Y: one()}
 
 	c := NewPoint().Add(a, b)
 	// fmt.Printf("%v = 2 * %v", *c, *a)
@@ -22,15 +30,15 @@ func TestAdd1(t *testing.T) {
 }
 
 func TestAdd2(t *testing.T) {
-	aX := utils.NewIntFromString(
+	aX := ff.NewElement().SetString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	aY := utils.NewIntFromString(
+	aY := ff.NewElement().SetString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	a := &Point{X: aX, Y: aY}
 
-	bX := utils.NewIntFromString(
+	bX := ff.NewElement().SetString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	bY := utils.NewIntFromString(
+	bY := ff.NewElement().SetString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	b := &Point{X: bX, Y: bY}
 
@@ -45,15 +53,15 @@ func TestAdd2(t *testing.T) {
 }
 
 func TestAdd3(t *testing.T) {
-	aX := utils.NewIntFromString(
+	aX := ff.NewElement().SetString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	aY := utils.NewIntFromString(
+	aY := ff.NewElement().SetString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	a := &Point{X: aX, Y: aY}
 
-	bX := utils.NewIntFromString(
+	bX := ff.NewElement().SetString(
 		"16540640123574156134436876038791482806971768689494387082833631921987005038935")
-	bY := utils.NewIntFromString(
+	bY := ff.NewElement().SetString(
 		"20819045374670962167435360035096875258406992893633759881276124905556507972311")
 	b := &Point{X: bX, Y: bY}
 
@@ -68,15 +76,15 @@ func TestAdd3(t *testing.T) {
 }
 
 func TestAdd4(t *testing.T) {
-	aX := utils.NewIntFromString(
+	aX := ff.NewElement().SetString(
 		"0")
-	aY := utils.NewIntFromString(
+	aY := ff.NewElement().SetString(
 		"1")
 	a := &Point{X: aX, Y: aY}
 
-	bX := utils.NewIntFromString(
+	bX := ff.NewElement().SetString(
 		"16540640123574156134436876038791482806971768689494387082833631921987005038935")
-	bY := utils.NewIntFromString(
+	bY := ff.NewElement().SetString(
 		"20819045374670962167435360035096875258406992893633759881276124905556507972311")
 	b := &Point{X: bX, Y: bY}
 
@@ -91,19 +99,19 @@ func TestAdd4(t *testing.T) {
 }
 
 func TestInCurve1(t *testing.T) {
-	p := &Point{X: big.NewInt(0), Y: big.NewInt(1)}
+	p := &Point{X: zero(), Y: one()}
 	assert.Equal(t, true, p.InCurve())
 }
 
 func TestInCurve2(t *testing.T) {
-	p := &Point{X: big.NewInt(1), Y: big.NewInt(0)}
+	p := &Point{X: one(), Y: zero()}
 	assert.Equal(t, false, p.InCurve())
 }
 
 func TestMul0(t *testing.T) {
-	x := utils.NewIntFromString(
+	x := ff.NewElement().SetString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := utils.NewIntFromString(
+	y := ff.NewElement().SetString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
 	s := utils.NewIntFromString("3")
@@ -123,9 +131,9 @@ func TestMul0(t *testing.T) {
 }
 
 func TestMul1(t *testing.T) {
-	x := utils.NewIntFromString(
+	x := ff.NewElement().SetString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := utils.NewIntFromString(
+	y := ff.NewElement().SetString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
 	s := utils.NewIntFromString(
@@ -140,9 +148,9 @@ func TestMul1(t *testing.T) {
 }
 
 func TestMul2(t *testing.T) {
-	x := utils.NewIntFromString(
+	x := ff.NewElement().SetString(
 		"6890855772600357754907169075114257697580319025794532037257385534741338397365")
-	y := utils.NewIntFromString(
+	y := ff.NewElement().SetString(
 		"4338620300185947561074059802482547481416142213883829469920100239455078257889")
 	p := &Point{X: x, Y: y}
 	s := utils.NewIntFromString(
@@ -157,45 +165,45 @@ func TestMul2(t *testing.T) {
 }
 
 func TestInCurve3(t *testing.T) {
-	x := utils.NewIntFromString(
+	x := ff.NewElement().SetString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := utils.NewIntFromString(
+	y := ff.NewElement().SetString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
 	assert.Equal(t, true, p.InCurve())
 }
 
 func TestInCurve4(t *testing.T) {
-	x := utils.NewIntFromString(
+	x := ff.NewElement().SetString(
 		"6890855772600357754907169075114257697580319025794532037257385534741338397365")
-	y := utils.NewIntFromString(
+	y := ff.NewElement().SetString(
 		"4338620300185947561074059802482547481416142213883829469920100239455078257889")
 	p := &Point{X: x, Y: y}
 	assert.Equal(t, true, p.InCurve())
 }
 
 func TestInSubGroup1(t *testing.T) {
-	x := utils.NewIntFromString(
+	x := ff.NewElement().SetString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := utils.NewIntFromString(
+	y := ff.NewElement().SetString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
 	assert.Equal(t, true, p.InSubGroup())
 }
 
 func TestInSubGroup2(t *testing.T) {
-	x := utils.NewIntFromString(
+	x := ff.NewElement().SetString(
 		"6890855772600357754907169075114257697580319025794532037257385534741338397365")
-	y := utils.NewIntFromString(
+	y := ff.NewElement().SetString(
 		"4338620300185947561074059802482547481416142213883829469920100239455078257889")
 	p := &Point{X: x, Y: y}
 	assert.Equal(t, true, p.InSubGroup())
 }
 
 func TestCompressDecompress1(t *testing.T) {
-	x := utils.NewIntFromString(
+	x := ff.NewElement().SetString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := utils.NewIntFromString(
+	y := ff.NewElement().SetString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
 
@@ -209,9 +217,9 @@ func TestCompressDecompress1(t *testing.T) {
 }
 
 func TestCompressDecompress2(t *testing.T) {
-	x := utils.NewIntFromString(
+	x := ff.NewElement().SetString(
 		"6890855772600357754907169075114257697580319025794532037257385534741338397365")
-	y := utils.NewIntFromString(
+	y := ff.NewElement().SetString(
 		"4338620300185947561074059802482547481416142213883829469920100239455078257889")
 	p := &Point{X: x, Y: y}
 
@@ -230,7 +238,8 @@ func TestCompressDecompressRnd(t *testing.T) {
 		buf := p1.Compress()
 		p2, err := NewPoint().Decompress(buf)
 		assert.Equal(t, nil, err)
-		assert.Equal(t, p1, p2)
+		// assert.Equal(t, p1, p2)
+		assert.True(t, p1.Equal(p2))
 	}
 }
 
@@ -241,15 +250,15 @@ func BenchmarkBabyjub(b *testing.B) {
 
 	var badpoints [n]*Point
 	for i := 0; i < n; i++ {
-		x := new(big.Int).Rand(rnd, constants.Q)
-		y := new(big.Int).Rand(rnd, constants.Q)
+		x := ff.NewElement().SetRandom()
+		y := ff.NewElement().SetRandom()
 		badpoints[i] = &Point{X: x, Y: y}
 	}
 
 	var points [n]*Point
-	baseX := utils.NewIntFromString(
+	baseX := ff.NewElement().SetString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	baseY := utils.NewIntFromString(
+	baseY := ff.NewElement().SetString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	base := &Point{X: baseX, Y: baseY}
 	for i := 0; i < n; i++ {
@@ -263,8 +272,8 @@ func BenchmarkBabyjub(b *testing.B) {
 	}
 
 	b.Run("AddConst", func(b *testing.B) {
-		p0 := &Point{X: big.NewInt(0), Y: big.NewInt(1)}
-		p1 := &Point{X: big.NewInt(0), Y: big.NewInt(1)}
+		p0 := &Point{X: zero(), Y: one()}
+		p1 := &Point{X: zero(), Y: one()}
 
 		p2 := NewPoint()
 		for i := 0; i < b.N; i++ {

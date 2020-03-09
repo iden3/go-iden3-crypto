@@ -180,7 +180,7 @@ func (k *PrivateKey) SignMimc7(msg *big.Int) *Signature {
 	r.Mod(r, SubOrder)
 	R8 := NewPoint().Mul(r, B8) // R8 = r * 8 * B
 	A := k.Public().Point()
-	hmInput := []*big.Int{R8.X, R8.Y, A.X, A.Y, msg}
+	hmInput := []*big.Int{R8.X.BigInt(), R8.Y.BigInt(), A.X.BigInt(), A.Y.BigInt(), msg}
 	hm, err := mimc7.Hash(hmInput, nil) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
 		panic(err)
@@ -196,7 +196,7 @@ func (k *PrivateKey) SignMimc7(msg *big.Int) *Signature {
 // VerifyMimc7 verifies the signature of a message encoded as a big.Int in Zq
 // using blake-512 hash for buffer hashing and mimc7 for big.Int hashing.
 func (p *PublicKey) VerifyMimc7(msg *big.Int, sig *Signature) bool {
-	hmInput := []*big.Int{sig.R8.X, sig.R8.Y, p.X, p.Y, msg}
+	hmInput := []*big.Int{sig.R8.X.BigInt(), sig.R8.Y.BigInt(), p.X.BigInt(), p.Y.BigInt(), msg}
 	hm, err := mimc7.Hash(hmInput, nil) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
 		panic(err)
@@ -207,7 +207,7 @@ func (p *PublicKey) VerifyMimc7(msg *big.Int, sig *Signature) bool {
 	r1.Mul(r1, hm)
 	right := NewPoint().Mul(r1, p.Point())
 	right.Add(sig.R8, right) // right = 8 * R + 8 * hm * A
-	return (left.X.Cmp(right.X) == 0) && (left.Y.Cmp(right.Y) == 0)
+	return left.X.Equal(right.X) && left.Y.Equal(right.Y)
 }
 
 // SignPoseidon signs a message encoded as a big.Int in Zq using blake-512 hash
@@ -223,7 +223,7 @@ func (k *PrivateKey) SignPoseidon(msg *big.Int) *Signature {
 	R8 := NewPoint().Mul(r, B8) // R8 = r * 8 * B
 	A := k.Public().Point()
 
-	hmInput := [poseidon.T]*big.Int{R8.X, R8.Y, A.X, A.Y, msg, big.NewInt(int64(0))}
+	hmInput := [poseidon.T]*big.Int{R8.X.BigInt(), R8.Y.BigInt(), A.X.BigInt(), A.Y.BigInt(), msg, big.NewInt(int64(0))}
 	hm, err := poseidon.PoseidonHash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
 		panic(err)
@@ -240,7 +240,7 @@ func (k *PrivateKey) SignPoseidon(msg *big.Int) *Signature {
 // VerifyPoseidon verifies the signature of a message encoded as a big.Int in Zq
 // using blake-512 hash for buffer hashing and Poseidon for big.Int hashing.
 func (p *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
-	hmInput := [poseidon.T]*big.Int{sig.R8.X, sig.R8.Y, p.X, p.Y, msg, big.NewInt(int64(0))}
+	hmInput := [poseidon.T]*big.Int{sig.R8.X.BigInt(), sig.R8.Y.BigInt(), p.X.BigInt(), p.Y.BigInt(), msg, big.NewInt(int64(0))}
 	hm, err := poseidon.PoseidonHash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
 		panic(err)
@@ -251,5 +251,5 @@ func (p *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
 	r1.Mul(r1, hm)
 	right := NewPoint().Mul(r1, p.Point())
 	right.Add(sig.R8, right) // right = 8 * R + 8 * hm * A
-	return (left.X.Cmp(right.X) == 0) && (left.Y.Cmp(right.Y) == 0)
+	return left.X.Equal(right.X) && left.Y.Equal(right.Y)
 }

@@ -31,8 +31,8 @@ func TestPublicKey(t *testing.T) {
 		hex.Decode(k[:], []byte{byte(i)})
 	}
 	pk := k.Public()
-	assert.True(t, pk.X.Cmp(constants.Q) == -1)
-	assert.True(t, pk.Y.Cmp(constants.Q) == -1)
+	assert.True(t, pk.X.BigInt().Cmp(constants.Q) == -1)
+	assert.True(t, pk.Y.BigInt().Cmp(constants.Q) == -1)
 }
 
 func TestSignVerifyMimc7(t *testing.T) {

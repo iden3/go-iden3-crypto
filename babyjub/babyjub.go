@@ -5,14 +5,15 @@ import (
 	"math/big"
 
 	"github.com/iden3/go-iden3-crypto/constants"
+	"github.com/iden3/go-iden3-crypto/ff"
 	"github.com/iden3/go-iden3-crypto/utils"
 )
 
 // A is one of the babyjub constants.
-var A *big.Int
+var A *ff.Element
 
 // D is one of the babyjub constants.
-var D *big.Int
+var D *ff.Element
 
 // Order of the babyjub curve.
 var Order *big.Int
@@ -27,29 +28,52 @@ var B8 *Point
 
 // init initializes global numbers and the subgroup base.
 func init() {
-	A = utils.NewIntFromString("168700")
-	D = utils.NewIntFromString("168696")
+	A = ff.NewElement().SetString("168700")
+	D = ff.NewElement().SetString("168696")
 
 	Order = utils.NewIntFromString(
 		"21888242871839275222246405745257275088614511777268538073601725287587578984328")
 	SubOrder = new(big.Int).Rsh(Order, 3)
 
 	B8 = NewPoint()
-	B8.X = utils.NewIntFromString(
+	B8.X = ff.NewElement().SetString(
 		"5299619240641551281634865583518297030282874472190772894086521144482721001553")
-	B8.Y = utils.NewIntFromString(
+	B8.Y = ff.NewElement().SetString(
 		"16950150798460657717958625567821834550301663161624707787222815936182638968203")
 }
 
-// Point represents a point of the babyjub curve.
-type Point struct {
+// PointBI represents a point of the babyjub curve.
+type PointBI struct {
 	X *big.Int
 	Y *big.Int
 }
 
-// NewPoint creates a new Point.
+type Point struct {
+	X *ff.Element
+	Y *ff.Element
+}
+
+func PointBIToPoint(p *PointBI) *Point {
+	return &Point{
+		X: ff.NewElement().SetBigInt(p.X),
+		Y: ff.NewElement().SetBigInt(p.Y),
+	}
+}
+
+func PointToPointBI(p *Point) *PointBI {
+	return &PointBI{
+		X: p.X.BigInt(),
+		Y: p.Y.BigInt(),
+	}
+}
+
+// NewPoint creates a new PointBI.
+func NewPointBI() *PointBI {
+	return &PointBI{X: big.NewInt(0), Y: big.NewInt(1)}
+}
+
 func NewPoint() *Point {
-	return &Point{X: big.NewInt(0), Y: big.NewInt(1)}
+	return &Point{X: ff.NewElement().SetZero(), Y: ff.NewElement().SetOne()}
 }
 
 // Set copies a Point c into the Point p
@@ -59,44 +83,45 @@ func (p *Point) Set(c *Point) *Point {
 	return p
 }
 
+func (p *Point) Equal(q *Point) bool {
+	// return p.X.Cmp(q.X) == 0 && p.Y.Cmp(q.Y) == 0
+	return p.X.Equal(q.X) && p.Y.Equal(q.Y)
+}
+
 // Add adds Point a and b into res
 func (res *Point) Add(a *Point, b *Point) *Point {
 	// x = (a.x * b.y + b.x * a.y) * (1 + D * a.x * b.x * a.y * b.y)^-1 mod q
-	x1a := new(big.Int).Mul(a.X, b.Y)
-	x1b := new(big.Int).Mul(b.X, a.Y)
+	x1a := ff.NewElement().Mul(a.X, b.Y)
+	x1b := ff.NewElement().Mul(b.X, a.Y)
 	x1a.Add(x1a, x1b) // x1a = a.x * b.y + b.x * a.y
 
-	x2 := new(big.Int).Set(D)
+	x2 := ff.NewElement().Set(D)
 	x2.Mul(x2, a.X)
 	x2.Mul(x2, b.X)
 	x2.Mul(x2, a.Y)
 	x2.Mul(x2, b.Y)
-	x2.Add(constants.One, x2)
-	x2.Mod(x2, constants.Q)
-	x2.ModInverse(x2, constants.Q) // x2 = (1 + D * a.x * b.x * a.y * b.y)^-1
+	x2.Add(ff.NewElement().SetOne(), x2)
+	x2.Inverse(x2) // x2 = (1 + D * a.x * b.x * a.y * b.y)^-1
 
 	// y = (a.y * b.y - A * a.x * b.x) * (1 - D * a.x * b.x * a.y * b.y)^-1 mod q
-	y1a := new(big.Int).Mul(a.Y, b.Y)
-	y1b := new(big.Int).Set(A)
+	y1a := ff.NewElement().Mul(a.Y, b.Y)
+	y1b := ff.NewElement().Set(A)
 	y1b.Mul(y1b, a.X)
 	y1b.Mul(y1b, b.X)
 
 	y1a.Sub(y1a, y1b) // y1a = a.y * b.y - A * a.x * b.x
 
-	y2 := new(big.Int).Set(D)
+	y2 := ff.NewElement().Set(D)
 	y2.Mul(y2, a.X)
 	y2.Mul(y2, b.X)
 	y2.Mul(y2, a.Y)
 	y2.Mul(y2, b.Y)
-	y2.Sub(constants.One, y2)
-	y2.Mod(y2, constants.Q)
-	y2.ModInverse(y2, constants.Q) // y2 = (1 - D * a.x * b.x * a.y * b.y)^-1
+	y2.Sub(ff.NewElement().SetOne(), y2)
+	y2.Inverse(y2) // y2 = (1 - D * a.x * b.x * a.y * b.y)^-1
 
 	res.X = x1a.Mul(x1a, x2)
-	res.X = res.X.Mod(res.X, constants.Q)
 
 	res.Y = y1a.Mul(y1a, y2)
-	res.Y = res.Y.Mod(res.Y, constants.Q)
 
 	return res
 }
@@ -104,8 +129,8 @@ func (res *Point) Add(a *Point, b *Point) *Point {
 // Mul multiplies the Point p by the scalar s and stores the result in res,
 // which is also returned.
 func (res *Point) Mul(s *big.Int, p *Point) *Point {
-	res.X = big.NewInt(0)
-	res.Y = big.NewInt(1)
+	res.X = ff.NewElement().SetZero()
+	res.Y = ff.NewElement().SetOne()
 	exp := NewPoint().Set(p)
 
 	for i := 0; i < s.BitLen(); i++ {
@@ -120,25 +145,21 @@ func (res *Point) Mul(s *big.Int, p *Point) *Point {
 
 // InCurve returns true when the Point p is in the babyjub curve.
 func (p *Point) InCurve() bool {
-	x2 := new(big.Int).Set(p.X)
+	x2 := ff.NewElement().Set(p.X)
 	x2.Mul(x2, x2)
-	x2.Mod(x2, constants.Q)
 
-	y2 := new(big.Int).Set(p.Y)
+	y2 := ff.NewElement().Set(p.Y)
 	y2.Mul(y2, y2)
-	y2.Mod(y2, constants.Q)
 
-	a := new(big.Int).Mul(A, x2)
+	a := ff.NewElement().Mul(A, x2)
 	a.Add(a, y2)
-	a.Mod(a, constants.Q)
 
-	b := new(big.Int).Set(D)
+	b := ff.NewElement().Set(D)
 	b.Mul(b, x2)
 	b.Mul(b, y2)
-	b.Add(constants.One, b)
-	b.Mod(b, constants.Q)
+	b.Add(ff.NewElement().SetOne(), b)
 
-	return a.Cmp(b) == 0
+	return a.Equal(b)
 }
 
 // InSubGroup returns true when the Point p is in the subgroup of the babyjub
@@ -148,7 +169,7 @@ func (p *Point) InSubGroup() bool {
 		return false
 	}
 	res := NewPoint().Mul(SubOrder, p)
-	return (res.X.Cmp(constants.Zero) == 0) && (res.Y.Cmp(constants.One) == 0)
+	return res.X.Equal(ff.NewElement().SetZero()) && res.Y.Equal(ff.NewElement().SetOne())
 }
 
 // PointCoordSign returns the sign of the curve point coordinate.  It returns
@@ -171,8 +192,9 @@ func PackPoint(ay *big.Int, sign bool) [32]byte {
 // Compress the point into a 32 byte array that contains the y coordinate in
 // little endian and the sign of the x coordinate.
 func (p *Point) Compress() [32]byte {
-	sign := PointCoordSign(p.X)
-	return PackPoint(p.Y, sign)
+	pBI := PointToPointBI(p)
+	sign := PointCoordSign(pBI.X)
+	return PackPoint(pBI.Y, sign)
 }
 
 // Decompress a compressed Point into p, and also returns the decompressed
@@ -183,34 +205,37 @@ func (p *Point) Decompress(leBuf [32]byte) (*Point, error) {
 		sign = true
 		leBuf[31] = leBuf[31] & 0x7F
 	}
-	utils.SetBigIntFromLEBytes(p.Y, leBuf[:])
-	if p.Y.Cmp(constants.Q) >= 0 {
+	y := big.NewInt(0)
+	utils.SetBigIntFromLEBytes(y, leBuf[:])
+	if y.Cmp(constants.Q) >= 0 {
 		return nil, fmt.Errorf("p.y >= Q")
 	}
+	p.Y = ff.NewElement().SetBigInt(y)
 
-	y2 := new(big.Int).Mul(p.Y, p.Y)
-	y2.Mod(y2, constants.Q)
-	xa := big.NewInt(1)
+	y2 := ff.NewElement().Mul(p.Y, p.Y)
+	xa := ff.NewElement().SetOne()
 	xa.Sub(xa, y2) // xa == 1 - y^2
 
-	xb := new(big.Int).Mul(D, y2)
-	xb.Mod(xb, constants.Q)
+	xb := ff.NewElement().Mul(D, y2)
 	xb.Sub(A, xb) // xb = A - d * y^2
 
-	if xb.Cmp(big.NewInt(0)) == 0 {
+	if xb.Equal(ff.NewElement().SetZero()) {
 		return nil, fmt.Errorf("division by 0")
 	}
-	xb.ModInverse(xb, constants.Q)
+	xb.Inverse(xb)
 	p.X.Mul(xa, xb) // xa / xb
-	p.X.Mod(p.X, constants.Q)
-	noSqrt := p.X.ModSqrt(p.X, constants.Q)
+
+	q := PointToPointBI(p)
+	noSqrt := q.X.ModSqrt(q.X, constants.Q)
 	if noSqrt == nil {
 		return nil, fmt.Errorf("x is not a square mod q")
 	}
-	if (sign && !PointCoordSign(p.X)) || (!sign && PointCoordSign(p.X)) {
-		p.X.Mul(p.X, constants.MinusOne)
+	if (sign && !PointCoordSign(q.X)) || (!sign && PointCoordSign(q.X)) {
+		q.X.Mul(q.X, constants.MinusOne)
 	}
-	p.X.Mod(p.X, constants.Q)
+	q.X.Mod(q.X, constants.Q)
+
+	p = PointBIToPoint(q)
 
 	return p, nil
 }
