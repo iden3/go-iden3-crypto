@@ -513,15 +513,33 @@ func (z *Element) String() string {
 
 // ToBigInt returns z as a big.Int in Montgomery form
 func (z *Element) ToBigInt(res *big.Int) *big.Int {
-	bits := (*[4]big.Word)(unsafe.Pointer(z))
-	return res.SetBits(bits[:])
+	if bits.UintSize == 64 {
+		bits := (*[4]big.Word)(unsafe.Pointer(z))
+		return res.SetBits(bits[:])
+	} else {
+		var bits [8]big.Word
+		for i := 0; i < len(z); i++ {
+			bits[i*2] = big.Word(z[i])
+			bits[i*2+1] = big.Word(z[i] >> 32)
+		}
+		return res.SetBits(bits[:])
+	}
 }
 
 // ToBigIntRegular returns z as a big.Int in regular form
 func (z Element) ToBigIntRegular(res *big.Int) *big.Int {
 	z.FromMont()
-	bits := (*[4]big.Word)(unsafe.Pointer(&z))
-	return res.SetBits(bits[:])
+	if bits.UintSize == 64 {
+		bits := (*[4]big.Word)(unsafe.Pointer(&z))
+		return res.SetBits(bits[:])
+	} else {
+		var bits [8]big.Word
+		for i := 0; i < len(z); i++ {
+			bits[i*2] = big.Word(z[i])
+			bits[i*2+1] = big.Word(z[i] >> 32)
+		}
+		return res.SetBits(bits[:])
+	}
 }
 
 // SetBigInt sets z to v (regular form) and returns z in Montgomery form
@@ -548,8 +566,18 @@ func (z *Element) SetBigInt(v *big.Int) *Element {
 	}
 	// v should
 	vBits := vv.Bits()
-	for i := 0; i < len(vBits); i++ {
-		z[i] = uint64(vBits[i])
+	if bits.UintSize == 64 {
+		for i := 0; i < len(vBits); i++ {
+			z[i] = uint64(vBits[i])
+		}
+	} else {
+		for i := 0; i < len(vBits); i++ {
+			if i%2 == 0 {
+				z[i/2] = uint64(vBits[i])
+			} else {
+				z[i/2] |= uint64(vBits[i]) << 32
+			}
+		}
 	}
 	return z.ToMont()
 }
