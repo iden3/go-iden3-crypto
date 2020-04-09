@@ -4,12 +4,22 @@ language: go
 go:
   - "1.12"
 
+# Travis overrides the GOARCH env var probably in its `travis_setup_go`
+# function, so we need a work around...
 jobs:
   include:
     - name: "Unit Tests 64 bit arch"
-      env: GOARCH="amd64"
+      env:
+        - XGOARCH="amd64"
     - name: "Unit Test 32 bit arch"
-      env: GOARCH="386"
+      env:
+        - XGOARCH="386"
 
 env:
   - GO111MODULE=on
+
+before_install:
+  - export GOARCH=$XGOARCH
+
+script:
+  - GOARCH=$XGOARCH go test -v ./...
