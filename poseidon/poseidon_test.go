@@ -104,7 +104,7 @@ func BenchmarkPoseidon(b *testing.B) {
 	bigArray4 := []*big.Int{b12, b45, b78, b41}
 
 	for i := 0; i < b.N; i++ {
-		Hash(bigArray4)
+		Hash(bigArray4) //nolint:errcheck
 	}
 }
 
@@ -117,6 +117,6 @@ func BenchmarkPoseidonLarge(b *testing.B) {
 	bigArray4 := []*big.Int{b12, b45, b78, b41}
 
 	for i := 0; i < b.N; i++ {
-		Hash(bigArray4)
+		Hash(bigArray4) //nolint:errcheck
 	}
 }

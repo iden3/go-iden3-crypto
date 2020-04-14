@@ -154,10 +154,7 @@ func (p *Point) InSubGroup() bool {
 // PointCoordSign returns the sign of the curve point coordinate.  It returns
 // false if the sign is positive and false if the sign is negative.
 func PointCoordSign(c *big.Int) bool {
-	if c.Cmp(new(big.Int).Rsh(constants.Q, 1)) == 1 {
-		return true
-	}
-	return false
+	return c.Cmp(new(big.Int).Rsh(constants.Q, 1)) == 1
 }
 
 func PackPoint(ay *big.Int, sign bool) [32]byte {

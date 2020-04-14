@@ -1,7 +1,6 @@
 package babyjub
 
 import (
-	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -10,25 +9,13 @@ import (
 	"github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-iden3-crypto/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
-
-func genInputs() (*PrivateKey, *big.Int) {
-	k := NewRandPrivKey()
-	fmt.Println("k", hex.EncodeToString(k[:]))
-
-	msgBuf := [32]byte{}
-	rand.Read(msgBuf[:])
-	msg := utils.SetBigIntFromLEBytes(new(big.Int), msgBuf[:])
-	msg.Mod(msg, constants.Q)
-	fmt.Println("msg", msg)
-
-	return &k, msg
-}
 
 func TestPublicKey(t *testing.T) {
 	var k PrivateKey
-	for i := 0; i < 256; i++ {
-		hex.Decode(k[:], []byte{byte(i)})
+	for i := 0; i < 32; i++ {
+		k[i] = byte(i)
 	}
 	pk := k.Public()
 	assert.True(t, pk.X.Cmp(constants.Q) == -1)
@@ -37,7 +24,8 @@ func TestPublicKey(t *testing.T) {
 
 func TestSignVerifyMimc7(t *testing.T) {
 	var k PrivateKey
-	hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	_, err := hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	require.Nil(t, err)
 	msgBuf, err := hex.DecodeString("00010203040506070809")
 	if err != nil {
 		panic(err)
@@ -81,7 +69,8 @@ func TestSignVerifyMimc7(t *testing.T) {
 
 func TestSignVerifyPoseidon(t *testing.T) {
 	var k PrivateKey
-	hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	_, err := hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	require.Nil(t, err)
 	msgBuf, err := hex.DecodeString("00010203040506070809")
 	if err != nil {
 		panic(err)
@@ -125,7 +114,8 @@ func TestSignVerifyPoseidon(t *testing.T) {
 
 func TestCompressDecompress(t *testing.T) {
 	var k PrivateKey
-	hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	_, err := hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	require.Nil(t, err)
 	pk := k.Public()
 	for i := 0; i < 64; i++ {
 		msgBuf, err := hex.DecodeString(fmt.Sprintf("000102030405060708%02d", i))
@@ -144,7 +134,8 @@ func TestCompressDecompress(t *testing.T) {
 
 func BenchmarkBabyjubEddsa(b *testing.B) {
 	var k PrivateKey
-	hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	_, err := hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	require.Nil(b, err)
 	pk := k.Public()
 
 	const n = 256
