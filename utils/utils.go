@@ -66,9 +66,7 @@ func HexEncode(bs []byte) string {
 
 // HexDecode decodes a hex string into an array of bytes.
 func HexDecode(h string) ([]byte, error) {
-	if strings.HasPrefix(h, "0x") {
-		h = h[2:]
-	}
+	h = strings.TrimPrefix(h, "0x")
 	return hex.DecodeString(h)
 }
 
@@ -92,10 +90,7 @@ func HexDecodeInto(dst []byte, h []byte) error {
 
 // CheckBigIntInField checks if given *big.Int fits in a Field Q element
 func CheckBigIntInField(a *big.Int) bool {
-	if a.Cmp(constants.Q) != -1 {
-		return false
-	}
-	return true
+	return a.Cmp(constants.Q) == -1
 }
 
 // CheckBigIntArrayInField checks if given *big.Int fits in a Field Q element

@@ -8,6 +8,9 @@ import (
 // the original blake from the SHA3 competition and not the new blake2 version.
 func Blake512(m []byte) []byte {
 	h := blake512.New()
-	h.Write(m[:])
+	_, err := h.Write(m[:])
+	if err != nil {
+		panic(err)
+	}
 	return h.Sum(nil)
 }
