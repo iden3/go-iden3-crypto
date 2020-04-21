@@ -103,10 +103,23 @@ func CheckBigIntArrayInField(arr []*big.Int) bool {
 	return true
 }
 
+// BigIntArrayToElementArray converts an array of *big.Int into an array of *ff.Element
 func BigIntArrayToElementArray(bi []*big.Int) []*ff.Element {
 	var o []*ff.Element
 	for i := range bi {
 		o = append(o, ff.NewElement().SetBigInt(bi[i]))
+	}
+	return o
+}
+
+// ElementArrayToBigIntArray converts an array of *ff.Element into an array of *big.Int
+func ElementArrayToBigIntArray(e []*ff.Element) []*big.Int {
+	var o []*big.Int
+	for i := range e {
+		ei := e[i]
+		bi := big.NewInt(0)
+		ei.ToBigIntRegular(bi)
+		o = append(o, bi)
 	}
 	return o
 }
