@@ -36,6 +36,13 @@ func NewRandPrivKey() PrivateKey {
 // Scalar converts a private key into the scalar value s following the EdDSA
 // standard, and using blake-512 hash.
 func (k *PrivateKey) Scalar() *PrivKeyScalar {
+	s := SkToBigInt(k)
+	return NewPrivKeyScalar(s)
+}
+
+// SkToBigInt converts a private key into the *big.Int value following the
+// EdDSA standard, and using blake-512 hash
+func SkToBigInt(k *PrivateKey) *big.Int {
 	sBuf := Blake512(k[:])
 	sBuf32 := [32]byte{}
 	copy(sBuf32[:], sBuf[:32])
@@ -43,7 +50,7 @@ func (k *PrivateKey) Scalar() *PrivKeyScalar {
 	s := new(big.Int)
 	utils.SetBigIntFromLEBytes(s, sBuf32[:])
 	s.Rsh(s, 3)
-	return NewPrivKeyScalar(s)
+	return s
 }
 
 // Pub returns the public key corresponding to a private key.
