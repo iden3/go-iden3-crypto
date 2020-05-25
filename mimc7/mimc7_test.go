@@ -74,8 +74,7 @@ func TestMIMC7(t *testing.T) {
 	assert.Equal(t, "0x"+hex.EncodeToString((*big.Int)(h4).Bytes()), "0x284bc1f34f335933a23a433b6ff3ee179d682cd5e5e2fcdd2d964afa85104beb")
 
 	msg := []byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.")
-	hmsg, err := HashBytes(msg)
-	assert.Nil(t, err)
+	hmsg := HashBytes(msg)
 	assert.Equal(t, "16855787120419064316734350414336285711017110414939748784029922801367685456065", hmsg.String())
 }
 

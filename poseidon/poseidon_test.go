@@ -73,8 +73,7 @@ func TestPoseidon(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "2978613163687734485261639854325792381691890647104372645321246092227111432722", hmsg2.String())
 
-	hmsg2, err = HashBytes(msg2)
-	assert.Nil(t, err)
+	hmsg2 = HashBytes(msg2)
 	assert.Equal(t, "2978613163687734485261639854325792381691890647104372645321246092227111432722", hmsg2.String())
 }
 

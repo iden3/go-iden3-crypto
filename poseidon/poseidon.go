@@ -179,7 +179,7 @@ func Hash(arr []*big.Int) (*big.Int, error) {
 
 // HashBytes hashes a msg byte slice by blocks of 31 bytes encoded as
 // little-endian
-func HashBytes(b []byte) (*big.Int, error) {
+func HashBytes(b []byte) *big.Int {
 	n := 31
 	bElems := make([]*big.Int, 0, len(b)/n+1)
 	for i := 0; i < len(b)/n; i++ {
@@ -193,5 +193,9 @@ func HashBytes(b []byte) (*big.Int, error) {
 		utils.SetBigIntFromLEBytes(v, b[(len(b)/n)*n:])
 		bElems = append(bElems, v)
 	}
-	return Hash(bElems)
+	h, err := Hash(bElems)
+	if err != nil {
+		panic(err)
+	}
+	return h
 }
