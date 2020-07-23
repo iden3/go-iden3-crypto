@@ -231,7 +231,7 @@ func (k *PrivateKey) SignPoseidon(msg *big.Int) *Signature {
 	A := k.Public().Point()
 
 	hmInput := [poseidon.T]*big.Int{R8.X, R8.Y, A.X, A.Y, msg, big.NewInt(int64(0))}
-	hm, err := poseidon.PoseidonHash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
+	hm, err := poseidon.Hash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
 		panic(err)
 	}
@@ -248,7 +248,7 @@ func (k *PrivateKey) SignPoseidon(msg *big.Int) *Signature {
 // using blake-512 hash for buffer hashing and Poseidon for big.Int hashing.
 func (p *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
 	hmInput := [poseidon.T]*big.Int{sig.R8.X, sig.R8.Y, p.X, p.Y, msg, big.NewInt(int64(0))}
-	hm, err := poseidon.PoseidonHash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
+	hm, err := poseidon.Hash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
 		panic(err)
 	}
