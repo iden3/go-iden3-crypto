@@ -15,16 +15,31 @@ func TestBlake2bVersion(t *testing.T) {
 	assert.Equal(t, "e57ba154fb2c47811dc1a2369b27e25a44915b4e4ece4eb8ec74850cb78e01b1", hex.EncodeToString(h[:]))
 }
 
-func TestPoseidon(t *testing.T) {
+func TestPoseidonHash(t *testing.T) {
+	b0 := big.NewInt(0)
 	b1 := big.NewInt(1)
 	b2 := big.NewInt(2)
-	h, err := Hash([]*big.Int{b1, b2})
+	h, err := Hash([T]*big.Int{b1, b2, b0, b0, b0, b0})
+	assert.Nil(t, err)
+	assert.Equal(t, "12242166908188651009877250812424843524687801523336557272219921456462821518061", h.String())
+
+	b3 := big.NewInt(3)
+	b4 := big.NewInt(4)
+	h, err = Hash([T]*big.Int{b3, b4, b0, b0, b0, b0})
+	assert.Nil(t, err)
+	assert.Equal(t, "17185195740979599334254027721507328033796809509313949281114643312710535000993", h.String())
+}
+
+func TestPoseidonHashArbitraryLen(t *testing.T) {
+	b1 := big.NewInt(1)
+	b2 := big.NewInt(2)
+	h, err := HashSlice([]*big.Int{b1, b2})
 	assert.Nil(t, err)
 	assert.Equal(t, "4932297968297298434239270129193057052722409868268166443802652458940273154855", h.String())
 
 	b3 := big.NewInt(3)
 	b4 := big.NewInt(4)
-	h, err = Hash([]*big.Int{b3, b4})
+	h, err = HashSlice([]*big.Int{b3, b4})
 	assert.Nil(t, err)
 	assert.Equal(t, "4635491972858758537477743930622086396911540895966845494943021655521913507504", h.String())
 
@@ -36,7 +51,7 @@ func TestPoseidon(t *testing.T) {
 	b10 := big.NewInt(10)
 	b11 := big.NewInt(11)
 	b12 := big.NewInt(12)
-	h, err = Hash([]*big.Int{b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12})
+	h, err = HashSlice([]*big.Int{b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12})
 	assert.Nil(t, err)
 	assert.Equal(t, "15278801138972282646981503374384603641625274360649669926363020545395022098027", h.String())
 
@@ -53,7 +68,7 @@ func TestPoseidon(t *testing.T) {
 		utils.SetBigIntFromLEBytes(v, msg[(len(msg)/n)*n:])
 		msgElems = append(msgElems, v)
 	}
-	hmsg, err := Hash(msgElems)
+	hmsg, err := HashSlice(msgElems)
 	assert.Nil(t, err)
 	assert.Equal(t, "16019700159595764790637132363672701294192939959594423814006267756172551741065", hmsg.String())
 
@@ -69,33 +84,30 @@ func TestPoseidon(t *testing.T) {
 		utils.SetBigIntFromLEBytes(v, msg2[(len(msg2)/n)*n:])
 		msg2Elems = append(msg2Elems, v)
 	}
-	hmsg2, err := Hash(msg2Elems)
+	hmsg2, err := HashSlice(msg2Elems)
 	assert.Nil(t, err)
-	assert.Equal(t, "2978613163687734485261639854325792381691890647104372645321246092227111432722", hmsg2.String())
-
-	hmsg2 = HashBytes(msg2)
 	assert.Equal(t, "2978613163687734485261639854325792381691890647104372645321246092227111432722", hmsg2.String())
 }
 
-func TestPoseidonBrokenChunks(t *testing.T) {
-	h1, err := Hash([]*big.Int{big.NewInt(0), big.NewInt(1), big.NewInt(2), big.NewInt(3), big.NewInt(4),
+func TestPoseidonHashArbitraryLenBrokenChunks(t *testing.T) {
+	h1, err := HashSlice([]*big.Int{big.NewInt(0), big.NewInt(1), big.NewInt(2), big.NewInt(3), big.NewInt(4),
 		big.NewInt(5), big.NewInt(6), big.NewInt(7), big.NewInt(8), big.NewInt(9)})
 	assert.Nil(t, err)
-	h2, err := Hash([]*big.Int{big.NewInt(5), big.NewInt(6), big.NewInt(7), big.NewInt(8), big.NewInt(9),
+	h2, err := HashSlice([]*big.Int{big.NewInt(5), big.NewInt(6), big.NewInt(7), big.NewInt(8), big.NewInt(9),
 		big.NewInt(0), big.NewInt(1), big.NewInt(2), big.NewInt(3), big.NewInt(4)})
 	assert.Nil(t, err)
 	assert.NotEqual(t, h1, h2)
 }
 
-func TestPoseidonBrokenPadding(t *testing.T) {
-	h1, err := Hash([]*big.Int{big.NewInt(int64(1))})
+func TestPoseidonHashArbitraryLenBrokenPadding(t *testing.T) {
+	h1, err := HashSlice([]*big.Int{big.NewInt(int64(1))})
 	assert.Nil(t, err)
-	h2, err := Hash([]*big.Int{big.NewInt(int64(1)), big.NewInt(int64(0))})
+	h2, err := HashSlice([]*big.Int{big.NewInt(int64(1)), big.NewInt(int64(0))})
 	assert.Nil(t, err)
 	assert.NotEqual(t, h1, h2)
 }
 
-func BenchmarkPoseidon(b *testing.B) {
+func BenchmarkPoseidonHashSmallValues(b *testing.B) {
 	b12 := big.NewInt(int64(12))
 	b45 := big.NewInt(int64(45))
 	b78 := big.NewInt(int64(78))
@@ -103,17 +115,16 @@ func BenchmarkPoseidon(b *testing.B) {
 	bigArray4 := []*big.Int{b12, b45, b78, b41}
 
 	for i := 0; i < b.N; i++ {
-		Hash(bigArray4) //nolint:errcheck
+		HashSlice(bigArray4) //nolint:errcheck
 	}
 }
 
-func BenchmarkPoseidonLarge(b *testing.B) {
-	b12 := utils.NewIntFromString("11384336176656855268977457483345535180380036354188103142384839473266348197733")
-	b45 := utils.NewIntFromString("11384336176656855268977457483345535180380036354188103142384839473266348197733")
-	b78 := utils.NewIntFromString("11384336176656855268977457483345535180380036354188103142384839473266348197733")
-	b41 := utils.NewIntFromString("11384336176656855268977457483345535180380036354188103142384839473266348197733")
+func BenchmarkPoseidonHash(b *testing.B) {
+	b0 := big.NewInt(0)
+	b1 := utils.NewIntFromString("12242166908188651009877250812424843524687801523336557272219921456462821518061")
+	b2 := utils.NewIntFromString("12242166908188651009877250812424843524687801523336557272219921456462821518061")
 
-	bigArray4 := []*big.Int{b12, b45, b78, b41}
+	bigArray4 := [T]*big.Int{b1, b2, b0, b0, b0, b0}
 
 	for i := 0; i < b.N; i++ {
 		Hash(bigArray4) //nolint:errcheck

@@ -120,8 +120,8 @@ func mix(state [T]*ff.Element, newState [T]*ff.Element, m [T][T]*ff.Element) {
 	}
 }
 
-// PoseidonHash computes the Poseidon hash for the given inputs
-func PoseidonHash(inpBI [T]*big.Int) (*big.Int, error) {
+// Hash computes the Poseidon hash for the given inputs
+func Hash(inpBI [T]*big.Int) (*big.Int, error) {
 	if !utils.CheckBigIntArrayInField(inpBI[:]) {
 		return nil, errors.New("inputs values not inside Finite Field")
 	}
@@ -148,9 +148,9 @@ func PoseidonHash(inpBI [T]*big.Int) (*big.Int, error) {
 	return r, nil
 }
 
-// Hash performs the Poseidon hash over a ff.Element array
+// HashSlice performs the Poseidon hash over a ff.Element array
 // in chunks of 5 elements
-func Hash(arr []*big.Int) (*big.Int, error) {
+func HashSlice(arr []*big.Int) (*big.Int, error) {
 	r := big.NewInt(int64(1))
 	for i := 0; i < len(arr); i = i + T - 1 {
 		var toHash [T]*big.Int
@@ -167,7 +167,7 @@ func Hash(arr []*big.Int) (*big.Int, error) {
 			toHash[j] = big.NewInt(0)
 		}
 
-		ph, err := PoseidonHash(toHash)
+		ph, err := Hash(toHash)
 		if err != nil {
 			return nil, err
 		}
@@ -175,27 +175,4 @@ func Hash(arr []*big.Int) (*big.Int, error) {
 	}
 
 	return r, nil
-}
-
-// HashBytes hashes a msg byte slice by blocks of 31 bytes encoded as
-// little-endian
-func HashBytes(b []byte) *big.Int {
-	n := 31
-	bElems := make([]*big.Int, 0, len(b)/n+1)
-	for i := 0; i < len(b)/n; i++ {
-		v := big.NewInt(int64(0))
-		utils.SetBigIntFromLEBytes(v, b[n*i:n*(i+1)])
-		bElems = append(bElems, v)
-
-	}
-	if len(b)%n != 0 {
-		v := big.NewInt(int64(0))
-		utils.SetBigIntFromLEBytes(v, b[(len(b)/n)*n:])
-		bElems = append(bElems, v)
-	}
-	h, err := Hash(bElems)
-	if err != nil {
-		panic(err)
-	}
-	return h
 }
