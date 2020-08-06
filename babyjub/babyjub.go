@@ -181,6 +181,14 @@ func (p *Point) Decompress(leBuf [32]byte) (*Point, error) {
 		leBuf[31] = leBuf[31] & 0x7F
 	}
 	utils.SetBigIntFromLEBytes(p.Y, leBuf[:])
+	return PointFromSignAndY(sign, p.Y)
+}
+
+// PointFromSignAndY returns a Point from a Sign and the Y coordinate
+func PointFromSignAndY(sign bool, y *big.Int) (*Point, error) {
+	var p Point
+	p.X = big.NewInt(0)
+	p.Y = y
 	if p.Y.Cmp(constants.Q) >= 0 {
 		return nil, fmt.Errorf("p.y >= Q")
 	}
@@ -209,5 +217,5 @@ func (p *Point) Decompress(leBuf [32]byte) (*Point, error) {
 	}
 	p.X.Mod(p.X, constants.Q)
 
-	return p, nil
+	return &p, nil
 }

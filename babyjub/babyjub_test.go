@@ -192,6 +192,20 @@ func TestInSubGroup2(t *testing.T) {
 	assert.Equal(t, true, p.InSubGroup())
 }
 
+func TestPointFromSignAndy(t *testing.T) {
+	x := utils.NewIntFromString(
+		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
+	y := utils.NewIntFromString(
+		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
+	p := &Point{X: x, Y: y}
+
+	sign := PointCoordSign(p.X)
+	p2, err := PointFromSignAndY(sign, p.Y)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, p.X.String(), p2.X.String())
+	assert.Equal(t, p.Y.String(), p2.Y.String())
+}
+
 func TestCompressDecompress1(t *testing.T) {
 	x := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
