@@ -6,6 +6,9 @@ import (
 	"math/big"
 	"testing"
 
+	"database/sql"
+	"database/sql/driver"
+
 	"github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-iden3-crypto/utils"
 	"github.com/stretchr/testify/assert"
@@ -130,6 +133,18 @@ func TestCompressDecompress(t *testing.T) {
 		ok := pk.VerifyMimc7(msg, sig2)
 		assert.Equal(t, true, ok)
 	}
+}
+
+func TestScannerValuer(t *testing.T) {
+	privK := NewRandPrivKey()
+	var value driver.Valuer
+	var scan sql.Scanner
+	value = privK.SignPoseidon(big.NewInt(674238462))
+	scan = privK.SignPoseidon(big.NewInt(1))
+	fromDB, err := value.Value()
+	assert.NoError(t, err)
+	assert.NoError(t, scan.Scan(fromDB))
+	assert.Equal(t, value, scan)
 }
 
 func BenchmarkBabyjubEddsa(b *testing.B) {

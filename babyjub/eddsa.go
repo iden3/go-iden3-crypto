@@ -2,6 +2,8 @@ package babyjub
 
 import (
 	"crypto/rand"
+	"database/sql/driver"
+	"fmt"
 
 	"github.com/iden3/go-iden3-crypto/mimc7"
 	"github.com/iden3/go-iden3-crypto/poseidon"
@@ -173,6 +175,27 @@ func (s *Signature) Decompress(buf [64]byte) (*Signature, error) {
 // fails.
 func (s *SignatureComp) Decompress() (*Signature, error) {
 	return new(Signature).Decompress(*s)
+}
+
+// Scan implements Scanner for database/sql.
+func (s *Signature) Scan(src interface{}) error {
+	srcB, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("can't scan %T into Signature", src)
+	}
+	if len(srcB) != 64 {
+		return fmt.Errorf("can't scan []byte of len %d into Signature, want %d", len(srcB), 64)
+	}
+	buf := [64]byte{}
+	copy(buf[:], srcB[:])
+	_, err := s.Decompress(buf)
+	return err
+}
+
+// Value implements valuer for database/sql.
+func (s *Signature) Value() (driver.Value, error) {
+	comp := s.Compress()
+	return comp[:], nil
 }
 
 // SignMimc7 signs a message encoded as a big.Int in Zq using blake-512 hash
