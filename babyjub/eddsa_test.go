@@ -135,12 +135,27 @@ func TestCompressDecompress(t *testing.T) {
 	}
 }
 
-func TestScannerValuer(t *testing.T) {
+func TestSignatureScannerValuer(t *testing.T) {
 	privK := NewRandPrivKey()
 	var value driver.Valuer
 	var scan sql.Scanner
 	value = privK.SignPoseidon(big.NewInt(674238462))
 	scan = privK.SignPoseidon(big.NewInt(1))
+	fromDB, err := value.Value()
+	assert.NoError(t, err)
+	assert.NoError(t, scan.Scan(fromDB))
+	assert.Equal(t, value, scan)
+}
+
+func TestPubKeyScannerValuer(t *testing.T) {
+	privKValue := NewRandPrivKey()
+	pubKValue := privKValue.Public()
+	privKScan := NewRandPrivKey()
+	pubKScan := privKScan.Public()
+	var value driver.Valuer
+	var scan sql.Scanner
+	value = pubKValue
+	scan = pubKScan
 	fromDB, err := value.Value()
 	assert.NoError(t, err)
 	assert.NoError(t, scan.Scan(fromDB))

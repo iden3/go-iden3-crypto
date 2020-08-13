@@ -283,3 +283,28 @@ func (p *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
 	right.Add(sig.R8, right) // right = 8 * R + 8 * hm * A
 	return (left.X.Cmp(right.X) == 0) && (left.Y.Cmp(right.Y) == 0)
 }
+
+// Scan implements Scanner for database/sql.
+func (p *PublicKey) Scan(src interface{}) error {
+	srcB, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("can't scan %T into PublicKey", src)
+	}
+	if len(srcB) != 32 {
+		return fmt.Errorf("can't scan []byte of len %d into PublicKey, want %d", len(srcB), 32)
+	}
+	var comp PublicKeyComp
+	copy(comp[:], srcB)
+	decomp, err := comp.Decompress()
+	if err != nil {
+		return err
+	}
+	*p = *decomp
+	return nil
+}
+
+// Value implements valuer for database/sql.
+func (p *PublicKey) Value() (driver.Value, error) {
+	comp := p.Compress()
+	return comp[:], nil
+}
