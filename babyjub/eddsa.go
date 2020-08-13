@@ -2,6 +2,8 @@ package babyjub
 
 import (
 	"crypto/rand"
+	"database/sql/driver"
+	"fmt"
 
 	"github.com/iden3/go-iden3-crypto/mimc7"
 	"github.com/iden3/go-iden3-crypto/poseidon"
@@ -175,6 +177,27 @@ func (s *SignatureComp) Decompress() (*Signature, error) {
 	return new(Signature).Decompress(*s)
 }
 
+// Scan implements Scanner for database/sql.
+func (s *Signature) Scan(src interface{}) error {
+	srcB, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("can't scan %T into Signature", src)
+	}
+	if len(srcB) != 64 {
+		return fmt.Errorf("can't scan []byte of len %d into Signature, want %d", len(srcB), 64)
+	}
+	buf := [64]byte{}
+	copy(buf[:], srcB[:])
+	_, err := s.Decompress(buf)
+	return err
+}
+
+// Value implements valuer for database/sql.
+func (s *Signature) Value() (driver.Value, error) {
+	comp := s.Compress()
+	return comp[:], nil
+}
+
 // SignMimc7 signs a message encoded as a big.Int in Zq using blake-512 hash
 // for buffer hashing and mimc7 for big.Int hashing.
 func (k *PrivateKey) SignMimc7(msg *big.Int) *Signature {
@@ -259,4 +282,29 @@ func (p *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
 	right := NewPoint().Mul(r1, p.Point())
 	right.Add(sig.R8, right) // right = 8 * R + 8 * hm * A
 	return (left.X.Cmp(right.X) == 0) && (left.Y.Cmp(right.Y) == 0)
+}
+
+// Scan implements Scanner for database/sql.
+func (p *PublicKey) Scan(src interface{}) error {
+	srcB, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("can't scan %T into PublicKey", src)
+	}
+	if len(srcB) != 32 {
+		return fmt.Errorf("can't scan []byte of len %d into PublicKey, want %d", len(srcB), 32)
+	}
+	var comp PublicKeyComp
+	copy(comp[:], srcB)
+	decomp, err := comp.Decompress()
+	if err != nil {
+		return err
+	}
+	*p = *decomp
+	return nil
+}
+
+// Value implements valuer for database/sql.
+func (p *PublicKey) Value() (driver.Value, error) {
+	comp := p.Compress()
+	return comp[:], nil
 }
