@@ -193,7 +193,7 @@ func (s *Signature) Scan(src interface{}) error {
 }
 
 // Value implements valuer for database/sql.
-func (s *Signature) Value() (driver.Value, error) {
+func (s Signature) Value() (driver.Value, error) {
 	comp := s.Compress()
 	return comp[:], nil
 }
@@ -304,7 +304,7 @@ func (p *PublicKey) Scan(src interface{}) error {
 }
 
 // Value implements valuer for database/sql.
-func (p *PublicKey) Value() (driver.Value, error) {
+func (p PublicKey) Value() (driver.Value, error) {
 	comp := p.Compress()
 	return comp[:], nil
 }
