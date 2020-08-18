@@ -2,177 +2,90 @@ package poseidon
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
-	"strconv"
 
-	"github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-iden3-crypto/ff"
 	"github.com/iden3/go-iden3-crypto/utils"
-	"golang.org/x/crypto/blake2b"
 )
 
-const SEED = "poseidon"
 const NROUNDSF = 8
-const NROUNDSP = 57
-const T = 6
 
-var constC []*ff.Element
-var constM [T][T]*ff.Element
+var NROUNDSP = []int{56, 57, 56, 60, 60, 63, 64, 63}
 
-func Zero() *ff.Element {
+func zero() *ff.Element {
 	return ff.NewElement()
 }
 
-func modQ(v *big.Int) {
-	v.Mod(v, constants.Q)
-}
-
-func init() {
-	constC = getPseudoRandom(SEED+"_constants", NROUNDSF+NROUNDSP)
-	constM = getMDS()
-}
-
-func getPseudoRandom(seed string, n int) []*ff.Element {
-	res := make([]*ff.Element, n)
-	hash := blake2b.Sum256([]byte(seed))
-	for i := 0; i < n; i++ {
-		hashBigInt := big.NewInt(int64(0))
-		res[i] = ff.NewElement().SetBigInt(utils.SetBigIntFromLEBytes(hashBigInt, hash[:]))
-		hash = blake2b.Sum256(hash[:])
-	}
-	return res
-}
-
-func nonceToString(n int) string {
-	r := strconv.Itoa(n)
-	for len(r) < 4 {
-		r = "0" + r
-	}
-	return r
-}
-
-// https://eprint.iacr.org/2019/458.pdf pag.8
-func getMDS() [T][T]*ff.Element {
-	nonce := 0
-	cauchyMatrix := getPseudoRandom(SEED+"_matrix_"+nonceToString(nonce), T*2)
-	for !checkAllDifferent(cauchyMatrix) {
-		nonce += 1
-		cauchyMatrix = getPseudoRandom(SEED+"_matrix_"+nonceToString(nonce), T*2)
-	}
-	var m [T][T]*ff.Element
-	for i := 0; i < T; i++ {
-		for j := 0; j < T; j++ {
-			m[i][j] = ff.NewElement().Sub(cauchyMatrix[i], cauchyMatrix[T+j])
-			m[i][j].Inverse(m[i][j])
-		}
-	}
-	return m
-}
-
-func checkAllDifferent(v []*ff.Element) bool {
-	for i := 0; i < len(v); i++ {
-		if v[i].Equal(ff.NewElement()) {
-			return false
-		}
-		for j := i + 1; j < len(v); j++ {
-			if v[i].Equal(v[j]) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
 // ark computes Add-Round Key, from the paper https://eprint.iacr.org/2019/458.pdf
-func ark(state [T]*ff.Element, c *ff.Element) {
-	for i := 0; i < T; i++ {
-		state[i].Add(state[i], c)
+func ark(state []*ff.Element, c []*ff.Element, it int) {
+	for i := 0; i < len(state); i++ {
+		state[i].Add(state[i], c[it+i])
 	}
 }
 
-// cubic performs x^5 mod p
+// exp5 performs x^5 mod p
 // https://eprint.iacr.org/2019/458.pdf page 8
-
-func cubic(a *ff.Element) {
+func exp5(a *ff.Element) {
 	a.Exp(*a, 5)
 }
 
 // sbox https://eprint.iacr.org/2019/458.pdf page 6
-func sbox(state [T]*ff.Element, i int) {
-	if (i < NROUNDSF/2) || (i >= NROUNDSF/2+NROUNDSP) {
-		for j := 0; j < T; j++ {
-			cubic(state[j])
+func sbox(nRoundsF, nRoundsP int, state []*ff.Element, i int) {
+	if (i < nRoundsF/2) || (i >= nRoundsF/2+nRoundsP) {
+		for j := 0; j < len(state); j++ {
+			exp5(state[j])
 		}
 	} else {
-		cubic(state[0])
+		exp5(state[0])
 	}
 }
 
 // mix returns [[matrix]] * [vector]
-func mix(state [T]*ff.Element, newState [T]*ff.Element, m [T][T]*ff.Element) {
-	mul := Zero()
-	for i := 0; i < T; i++ {
+func mix(state []*ff.Element, newState []*ff.Element, m [][]*ff.Element) {
+	mul := zero()
+	for i := 0; i < len(state); i++ {
 		newState[i].SetUint64(0)
-		for j := 0; j < T; j++ {
-			mul.Mul(m[i][j], state[j])
+		for j := 0; j < len(state); j++ {
+			mul.Mul(m[j][i], state[j])
 			newState[i].Add(newState[i], mul)
 		}
 	}
 }
 
 // Hash computes the Poseidon hash for the given inputs
-func Hash(inpBI [T]*big.Int) (*big.Int, error) {
+func Hash(inpBI []*big.Int) (*big.Int, error) {
+	t := len(inpBI) + 1
+	if len(inpBI) == 0 || len(inpBI) >= len(NROUNDSP)-1 {
+		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP)-1)
+	}
 	if !utils.CheckBigIntArrayInField(inpBI[:]) {
 		return nil, errors.New("inputs values not inside Finite Field")
 	}
 	inp := utils.BigIntArrayToElementArray(inpBI[:])
-	state := [T]*ff.Element{}
-	for i := 0; i < T; i++ {
-		state[i] = ff.NewElement().Set(inp[i])
+	state := make([]*ff.Element, t)
+	copy(state[:], inp[:])
+	state[len(state)-1] = zero()
+
+	nRoundsF := NROUNDSF
+	nRoundsP := NROUNDSP[t-2]
+
+	newState := make([]*ff.Element, t)
+	for i := 0; i < t; i++ {
+		newState[i] = zero()
 	}
 
 	// ARK --> SBox --> M, https://eprint.iacr.org/2019/458.pdf pag.5
-	var newState [T]*ff.Element
-	for i := 0; i < T; i++ {
-		newState[i] = Zero()
-	}
-	for i := 0; i < NROUNDSF+NROUNDSP; i++ {
-		ark(state, constC[i])
-		sbox(state, i)
-		mix(state, newState, constM)
-		state, newState = newState, state
+	for i := 0; i < nRoundsF+nRoundsP; i++ {
+		ark(state, c.c[t-2], i*t)
+		sbox(nRoundsF, nRoundsP, state, i)
+		if i < nRoundsF+nRoundsP-1 {
+			mix(state, newState, c.m[t-2])
+			state, newState = newState, state
+		}
 	}
 	rE := state[0]
 	r := big.NewInt(0)
 	rE.ToBigIntRegular(r)
-	return r, nil
-}
-
-// HashSlice performs the Poseidon hash over a ff.Element array
-// in chunks of 5 elements
-func HashSlice(arr []*big.Int) (*big.Int, error) {
-	r := big.NewInt(int64(1))
-	for i := 0; i < len(arr); i = i + T - 1 {
-		var toHash [T]*big.Int
-		j := 0
-		for ; j < T-1; j++ {
-			if i+j >= len(arr) {
-				break
-			}
-			toHash[j] = arr[i+j]
-		}
-		toHash[j] = r
-		j++
-		for ; j < T; j++ {
-			toHash[j] = big.NewInt(0)
-		}
-
-		ph, err := Hash(toHash)
-		if err != nil {
-			return nil, err
-		}
-		modQ(r.Add(r, ph))
-	}
-
 	return r, nil
 }
