@@ -1,6 +1,7 @@
 package babyjub
 
 import (
+	"bytes"
 	"fmt"
 	"math/big"
 
@@ -41,6 +42,76 @@ func init() {
 		"16950150798460657717958625567821834550301663161624707787222815936182638968203")
 }
 
+// PointProjective is the Point representation in projective coordinates
+type PointProjective struct {
+	X *big.Int
+	Y *big.Int
+	Z *big.Int
+}
+
+// NewPointProjective creates a new Point in projective coordinates.
+func NewPointProjective() *PointProjective {
+	return &PointProjective{X: big.NewInt(0), Y: big.NewInt(1), Z: big.NewInt(1)}
+}
+
+// Affine returns the Point from the projective representation
+func (p *PointProjective) Affine() *Point {
+	if bytes.Equal(p.Z.Bytes(), big.NewInt(0).Bytes()) {
+		return &Point{
+			X: big.NewInt(0),
+			Y: big.NewInt(0),
+		}
+	}
+	zinv := new(big.Int).ModInverse(p.Z, constants.Q)
+	x := new(big.Int).Mul(p.X, zinv)
+	x.Mod(x, constants.Q)
+	y := new(big.Int).Mul(p.Y, zinv)
+	y.Mod(y, constants.Q)
+	return &Point{
+		X: x,
+		Y: y,
+	}
+}
+
+// Add computes the addition of two points in projective coordinates representation
+func (res *PointProjective) Add(p *PointProjective, q *PointProjective) *PointProjective {
+	// add-2008-bbjlp https://hyperelliptic.org/EFD/g1p/auto-twisted-projective.html#doubling-dbl-2008-bbjlp
+	a := new(big.Int).Mul(p.Z, q.Z)
+	b := new(big.Int).Set(a)
+	b.Exp(b, big.NewInt(2), constants.Q)
+	c := new(big.Int).Mul(p.X, q.X)
+	c.Mod(c, constants.Q) // apply Mod to reduce number file and speed computation
+	d := new(big.Int).Mul(p.Y, q.Y)
+	d.Mod(d, constants.Q)
+	e := new(big.Int).Mul(D, c)
+	e.Mul(e, d)
+	e.Mod(e, constants.Q)
+	f := new(big.Int).Sub(b, e)
+	f.Mod(f, constants.Q)
+	g := new(big.Int).Add(b, e)
+	g.Mod(g, constants.Q)
+	x1y1 := new(big.Int).Add(p.X, p.Y)
+	x2y2 := new(big.Int).Add(q.X, q.Y)
+	x3 := new(big.Int).Mul(x1y1, x2y2)
+	x3.Sub(x3, c)
+	x3.Sub(x3, d)
+	x3.Mul(x3, a)
+	x3.Mul(x3, f)
+	x3.Mod(x3, constants.Q)
+	ac := new(big.Int).Mul(A, c)
+	y3 := new(big.Int).Sub(d, ac)
+	y3.Mul(y3, a)
+	y3.Mul(y3, g)
+	y3.Mod(y3, constants.Q)
+	z3 := new(big.Int).Mul(f, g)
+	z3.Mod(z3, constants.Q)
+
+	res.X = x3
+	res.Y = y3
+	res.Z = z3
+	return res
+}
+
 // Point represents a point of the babyjub curve.
 type Point struct {
 	X *big.Int
@@ -59,62 +130,32 @@ func (p *Point) Set(c *Point) *Point {
 	return p
 }
 
-// Add adds Point a and b into res
-func (res *Point) Add(a *Point, b *Point) *Point {
-	// x = (a.x * b.y + b.x * a.y) * (1 + D * a.x * b.x * a.y * b.y)^-1 mod q
-	x1a := new(big.Int).Mul(a.X, b.Y)
-	x1b := new(big.Int).Mul(b.X, a.Y)
-	x1a.Add(x1a, x1b) // x1a = a.x * b.y + b.x * a.y
-
-	x2 := new(big.Int).Set(D)
-	x2.Mul(x2, a.X)
-	x2.Mul(x2, b.X)
-	x2.Mul(x2, a.Y)
-	x2.Mul(x2, b.Y)
-	x2.Add(constants.One, x2)
-	x2.Mod(x2, constants.Q)
-	x2.ModInverse(x2, constants.Q) // x2 = (1 + D * a.x * b.x * a.y * b.y)^-1
-
-	// y = (a.y * b.y - A * a.x * b.x) * (1 - D * a.x * b.x * a.y * b.y)^-1 mod q
-	y1a := new(big.Int).Mul(a.Y, b.Y)
-	y1b := new(big.Int).Set(A)
-	y1b.Mul(y1b, a.X)
-	y1b.Mul(y1b, b.X)
-
-	y1a.Sub(y1a, y1b) // y1a = a.y * b.y - A * a.x * b.x
-
-	y2 := new(big.Int).Set(D)
-	y2.Mul(y2, a.X)
-	y2.Mul(y2, b.X)
-	y2.Mul(y2, a.Y)
-	y2.Mul(y2, b.Y)
-	y2.Sub(constants.One, y2)
-	y2.Mod(y2, constants.Q)
-	y2.ModInverse(y2, constants.Q) // y2 = (1 - D * a.x * b.x * a.y * b.y)^-1
-
-	res.X = x1a.Mul(x1a, x2)
-	res.X = res.X.Mod(res.X, constants.Q)
-
-	res.Y = y1a.Mul(y1a, y2)
-	res.Y = res.Y.Mod(res.Y, constants.Q)
-
-	return res
+// Projective returns a PointProjective from the Point
+func (p *Point) Projective() *PointProjective {
+	return &PointProjective{
+		X: p.X,
+		Y: p.Y,
+		Z: big.NewInt(1),
+	}
 }
 
 // Mul multiplies the Point p by the scalar s and stores the result in res,
 // which is also returned.
 func (res *Point) Mul(s *big.Int, p *Point) *Point {
-	res.X = big.NewInt(0)
-	res.Y = big.NewInt(1)
-	exp := NewPoint().Set(p)
+	resProj := &PointProjective{
+		X: big.NewInt(0),
+		Y: big.NewInt(1),
+		Z: big.NewInt(1),
+	}
+	exp := p.Projective()
 
 	for i := 0; i < s.BitLen(); i++ {
 		if s.Bit(i) == 1 {
-			res.Add(res, exp)
+			resProj.Add(resProj, exp)
 		}
-		exp.Add(exp, exp)
+		exp = exp.Add(exp, exp)
 	}
-
+	res = resProj.Affine()
 	return res
 }
 
