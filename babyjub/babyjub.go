@@ -5,14 +5,21 @@ import (
 	"math/big"
 
 	"github.com/iden3/go-iden3-crypto/constants"
+	"github.com/iden3/go-iden3-crypto/ff"
 	"github.com/iden3/go-iden3-crypto/utils"
 )
 
 // A is one of the babyjub constants.
 var A *big.Int
 
+// Aff is A value in *ff.Element representation
+var Aff *ff.Element
+
 // D is one of the babyjub constants.
 var D *big.Int
+
+// Dff is D value in *ff.Element representation
+var Dff *ff.Element
 
 // Order of the babyjub curve.
 var Order *big.Int
@@ -29,6 +36,8 @@ var B8 *Point
 func init() {
 	A = utils.NewIntFromString("168700")
 	D = utils.NewIntFromString("168696")
+	Aff = ff.NewElement().SetBigInt(A)
+	Dff = ff.NewElement().SetBigInt(D)
 
 	Order = utils.NewIntFromString(
 		"21888242871839275222246405745257275088614511777268538073601725287587578984328")
@@ -39,6 +48,70 @@ func init() {
 		"5299619240641551281634865583518297030282874472190772894086521144482721001553")
 	B8.Y = utils.NewIntFromString(
 		"16950150798460657717958625567821834550301663161624707787222815936182638968203")
+}
+
+// PointProjective is the Point representation in projective coordinates
+type PointProjective struct {
+	X *ff.Element
+	Y *ff.Element
+	Z *ff.Element
+}
+
+// NewPointProjective creates a new Point in projective coordinates.
+func NewPointProjective() *PointProjective {
+	return &PointProjective{X: ff.NewElement().SetZero(), Y: ff.NewElement().SetOne(), Z: ff.NewElement().SetOne()}
+}
+
+// Affine returns the Point from the projective representation
+func (p *PointProjective) Affine() *Point {
+	if p.Z.Equal(ff.NewElement().SetZero()) {
+		return &Point{
+			X: big.NewInt(0),
+			Y: big.NewInt(0),
+		}
+	}
+	zinv := ff.NewElement().Inverse(p.Z)
+	x := ff.NewElement().Mul(p.X, zinv)
+
+	y := ff.NewElement().Mul(p.Y, zinv)
+	xBig := big.NewInt(0)
+	x.ToBigIntRegular(xBig)
+	yBig := big.NewInt(0)
+	y.ToBigIntRegular(yBig)
+	return &Point{
+		X: xBig,
+		Y: yBig,
+	}
+}
+
+// Add computes the addition of two points in projective coordinates representation
+func (res *PointProjective) Add(p *PointProjective, q *PointProjective) *PointProjective {
+	// add-2008-bbjlp https://hyperelliptic.org/EFD/g1p/auto-twisted-projective.html#doubling-dbl-2008-bbjlp
+	a := ff.NewElement().Mul(p.Z, q.Z)
+	b := ff.NewElement().Square(a)
+	c := ff.NewElement().Mul(p.X, q.X)
+	d := ff.NewElement().Mul(p.Y, q.Y)
+	e := ff.NewElement().Mul(Dff, c)
+	e.MulAssign(d)
+	f := ff.NewElement().Sub(b, e)
+	g := ff.NewElement().Add(b, e)
+	x1y1 := ff.NewElement().Add(p.X, p.Y)
+	x2y2 := ff.NewElement().Add(q.X, q.Y)
+	x3 := ff.NewElement().Mul(x1y1, x2y2)
+	x3.SubAssign(c)
+	x3.SubAssign(d)
+	x3.MulAssign(a)
+	x3.MulAssign(f)
+	ac := ff.NewElement().Mul(Aff, c)
+	y3 := ff.NewElement().Sub(d, ac)
+	y3.MulAssign(a)
+	y3.MulAssign(g)
+	z3 := ff.NewElement().Mul(f, g)
+
+	res.X = x3
+	res.Y = y3
+	res.Z = z3
+	return res
 }
 
 // Point represents a point of the babyjub curve.
@@ -59,62 +132,32 @@ func (p *Point) Set(c *Point) *Point {
 	return p
 }
 
-// Add adds Point a and b into res
-func (res *Point) Add(a *Point, b *Point) *Point {
-	// x = (a.x * b.y + b.x * a.y) * (1 + D * a.x * b.x * a.y * b.y)^-1 mod q
-	x1a := new(big.Int).Mul(a.X, b.Y)
-	x1b := new(big.Int).Mul(b.X, a.Y)
-	x1a.Add(x1a, x1b) // x1a = a.x * b.y + b.x * a.y
-
-	x2 := new(big.Int).Set(D)
-	x2.Mul(x2, a.X)
-	x2.Mul(x2, b.X)
-	x2.Mul(x2, a.Y)
-	x2.Mul(x2, b.Y)
-	x2.Add(constants.One, x2)
-	x2.Mod(x2, constants.Q)
-	x2.ModInverse(x2, constants.Q) // x2 = (1 + D * a.x * b.x * a.y * b.y)^-1
-
-	// y = (a.y * b.y - A * a.x * b.x) * (1 - D * a.x * b.x * a.y * b.y)^-1 mod q
-	y1a := new(big.Int).Mul(a.Y, b.Y)
-	y1b := new(big.Int).Set(A)
-	y1b.Mul(y1b, a.X)
-	y1b.Mul(y1b, b.X)
-
-	y1a.Sub(y1a, y1b) // y1a = a.y * b.y - A * a.x * b.x
-
-	y2 := new(big.Int).Set(D)
-	y2.Mul(y2, a.X)
-	y2.Mul(y2, b.X)
-	y2.Mul(y2, a.Y)
-	y2.Mul(y2, b.Y)
-	y2.Sub(constants.One, y2)
-	y2.Mod(y2, constants.Q)
-	y2.ModInverse(y2, constants.Q) // y2 = (1 - D * a.x * b.x * a.y * b.y)^-1
-
-	res.X = x1a.Mul(x1a, x2)
-	res.X = res.X.Mod(res.X, constants.Q)
-
-	res.Y = y1a.Mul(y1a, y2)
-	res.Y = res.Y.Mod(res.Y, constants.Q)
-
-	return res
+// Projective returns a PointProjective from the Point
+func (p *Point) Projective() *PointProjective {
+	return &PointProjective{
+		X: ff.NewElement().SetBigInt(p.X),
+		Y: ff.NewElement().SetBigInt(p.Y),
+		Z: ff.NewElement().SetOne(),
+	}
 }
 
 // Mul multiplies the Point p by the scalar s and stores the result in res,
 // which is also returned.
 func (res *Point) Mul(s *big.Int, p *Point) *Point {
-	res.X = big.NewInt(0)
-	res.Y = big.NewInt(1)
-	exp := NewPoint().Set(p)
+	resProj := &PointProjective{
+		X: ff.NewElement().SetZero(),
+		Y: ff.NewElement().SetOne(),
+		Z: ff.NewElement().SetOne(),
+	}
+	exp := p.Projective()
 
 	for i := 0; i < s.BitLen(); i++ {
 		if s.Bit(i) == 1 {
-			res.Add(res, exp)
+			resProj.Add(resProj, exp)
 		}
-		exp.Add(exp, exp)
+		exp = exp.Add(exp, exp)
 	}
-
+	res = resProj.Affine()
 	return res
 }
 

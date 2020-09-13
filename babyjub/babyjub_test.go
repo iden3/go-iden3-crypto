@@ -15,7 +15,7 @@ func TestAdd1(t *testing.T) {
 	a := &Point{X: big.NewInt(0), Y: big.NewInt(1)}
 	b := &Point{X: big.NewInt(0), Y: big.NewInt(1)}
 
-	c := NewPoint().Add(a, b)
+	c := NewPoint().Projective().Add(a.Projective(), b.Projective())
 	// fmt.Printf("%v = 2 * %v", *c, *a)
 	assert.Equal(t, "0", c.X.String())
 	assert.Equal(t, "1", c.Y.String())
@@ -34,7 +34,7 @@ func TestAdd2(t *testing.T) {
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	b := &Point{X: bX, Y: bY}
 
-	c := NewPoint().Add(a, b)
+	c := NewPoint().Projective().Add(a.Projective(), b.Projective()).Affine()
 	// fmt.Printf("%v = 2 * %v", *c, *a)
 	assert.Equal(t,
 		"6890855772600357754907169075114257697580319025794532037257385534741338397365",
@@ -42,6 +42,17 @@ func TestAdd2(t *testing.T) {
 	assert.Equal(t,
 		"4338620300185947561074059802482547481416142213883829469920100239455078257889",
 		c.Y.String())
+
+	d := NewPointProjective().Add(c.Projective(), c.Projective()).Affine()
+	assert.Equal(t, "2f6458832049e917c95867185a96621336df33e13c98e81d1ef4928cdbb77772", hex.EncodeToString(d.X.Bytes()))
+
+	// Projective
+	aP := a.Projective()
+	bP := b.Projective()
+	cP := NewPointProjective().Add(aP, bP)
+	c2 := cP.Affine()
+	assert.Equal(t, c, c2)
+
 }
 
 func TestAdd3(t *testing.T) {
@@ -57,7 +68,7 @@ func TestAdd3(t *testing.T) {
 		"20819045374670962167435360035096875258406992893633759881276124905556507972311")
 	b := &Point{X: bX, Y: bY}
 
-	c := NewPoint().Add(a, b)
+	c := NewPoint().Projective().Add(a.Projective(), b.Projective()).Affine()
 	// fmt.Printf("%v = 2 * %v", *c, *a)
 	assert.Equal(t,
 		"7916061937171219682591368294088513039687205273691143098332585753343424131937",
@@ -80,7 +91,7 @@ func TestAdd4(t *testing.T) {
 		"20819045374670962167435360035096875258406992893633759881276124905556507972311")
 	b := &Point{X: bX, Y: bY}
 
-	c := NewPoint().Add(a, b)
+	c := NewPoint().Projective().Add(a.Projective(), b.Projective()).Affine()
 	// fmt.Printf("%v = 2 * %v", *c, *a)
 	assert.Equal(t,
 		"16540640123574156134436876038791482806971768689494387082833631921987005038935",
@@ -108,8 +119,8 @@ func TestMul0(t *testing.T) {
 	p := &Point{X: x, Y: y}
 	s := utils.NewIntFromString("3")
 
-	r2 := NewPoint().Add(p, p)
-	r2 = NewPoint().Add(r2, p)
+	r2 := NewPoint().Projective().Add(p.Projective(), p.Projective()).Affine()
+	r2 = NewPoint().Projective().Add(r2.Projective(), p.Projective()).Affine()
 	r := NewPoint().Mul(s, p)
 	assert.Equal(t, r2.X.String(), r.X.String())
 	assert.Equal(t, r2.Y.String(), r.Y.String())
@@ -244,7 +255,8 @@ func TestCompressDecompressRnd(t *testing.T) {
 		buf := p1.Compress()
 		p2, err := NewPoint().Decompress(buf)
 		assert.Equal(t, nil, err)
-		assert.Equal(t, p1, p2)
+		assert.Equal(t, p1.X.Bytes(), p2.X.Bytes())
+		assert.Equal(t, p1.Y.Bytes(), p2.Y.Bytes())
 	}
 }
 
@@ -261,6 +273,7 @@ func BenchmarkBabyjub(b *testing.B) {
 	}
 
 	var points [n]*Point
+	var pointsProj [n]*PointProjective
 	baseX := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
 	baseY := utils.NewIntFromString(
@@ -269,6 +282,7 @@ func BenchmarkBabyjub(b *testing.B) {
 	for i := 0; i < n; i++ {
 		s := new(big.Int).Rand(rnd, constants.Q)
 		points[i] = NewPoint().Mul(s, base)
+		pointsProj[i] = NewPoint().Mul(s, base).Projective()
 	}
 
 	var scalars [n]*big.Int
@@ -279,17 +293,19 @@ func BenchmarkBabyjub(b *testing.B) {
 	b.Run("AddConst", func(b *testing.B) {
 		p0 := &Point{X: big.NewInt(0), Y: big.NewInt(1)}
 		p1 := &Point{X: big.NewInt(0), Y: big.NewInt(1)}
+		p0Proj := p0.Projective()
+		p1Proj := p1.Projective()
 
-		p2 := NewPoint()
+		p2 := NewPoint().Projective()
 		for i := 0; i < b.N; i++ {
-			p2.Add(p0, p1)
+			p2.Add(p0Proj, p1Proj)
 		}
 	})
 
 	b.Run("AddRnd", func(b *testing.B) {
-		res := NewPoint()
+		res := NewPoint().Projective()
 		for i := 0; i < b.N; i++ {
-			res.Add(points[i%(n/2)], points[i%(n/2)+1])
+			res.Add(pointsProj[i%(n/2)], pointsProj[i%(n/2)+1])
 		}
 	})
 

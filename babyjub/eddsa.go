@@ -236,7 +236,9 @@ func (p *PublicKey) VerifyMimc7(msg *big.Int, sig *Signature) bool {
 	r1 := big.NewInt(8)
 	r1.Mul(r1, hm)
 	right := NewPoint().Mul(r1, p.Point())
-	right.Add(sig.R8, right) // right = 8 * R + 8 * hm * A
+	rightProj := right.Projective()
+	rightProj.Add(sig.R8.Projective(), rightProj) // right = 8 * R + 8 * hm * A
+	right = rightProj.Affine()
 	return (left.X.Cmp(right.X) == 0) && (left.Y.Cmp(right.Y) == 0)
 }
 
@@ -280,7 +282,9 @@ func (p *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
 	r1 := big.NewInt(8)
 	r1.Mul(r1, hm)
 	right := NewPoint().Mul(r1, p.Point())
-	right.Add(sig.R8, right) // right = 8 * R + 8 * hm * A
+	rightProj := right.Projective()
+	rightProj.Add(sig.R8.Projective(), rightProj) // right = 8 * R + 8 * hm * A
+	right = rightProj.Affine()
 	return (left.X.Cmp(right.X) == 0) && (left.Y.Cmp(right.Y) == 0)
 }
 
