@@ -178,6 +178,24 @@ func (s *SignatureComp) Decompress() (*Signature, error) {
 }
 
 // Scan implements Scanner for database/sql.
+func (s *SignatureComp) Scan(src interface{}) error {
+	srcB, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("can't scan %T into Signature", src)
+	}
+	if len(srcB) != 64 {
+		return fmt.Errorf("can't scan []byte of len %d into Signature, want %d", len(srcB), 64)
+	}
+	copy(s[:], srcB[:])
+	return nil
+}
+
+// Value implements valuer for database/sql.
+func (s SignatureComp) Value() (driver.Value, error) {
+	return s[:], nil
+}
+
+// Scan implements Scanner for database/sql.
 func (s *Signature) Scan(src interface{}) error {
 	srcB, ok := src.([]byte)
 	if !ok {

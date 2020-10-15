@@ -135,6 +135,17 @@ func TestCompressDecompress(t *testing.T) {
 	}
 }
 
+func TestSignatureCompScannerValuer(t *testing.T) {
+	privK := NewRandPrivKey()
+	var value driver.Valuer //nolint:gosimple this is done to ensure interface compability
+	value = privK.SignPoseidon(big.NewInt(674238462)).Compress()
+	scan := privK.SignPoseidon(big.NewInt(1)).Compress()
+	fromDB, err := value.Value()
+	assert.Nil(t, err)
+	assert.Nil(t, scan.Scan(fromDB))
+	assert.Equal(t, value, scan)
+}
+
 func TestSignatureScannerValuer(t *testing.T) {
 	privK := NewRandPrivKey()
 	var value driver.Valuer
@@ -142,8 +153,8 @@ func TestSignatureScannerValuer(t *testing.T) {
 	value = privK.SignPoseidon(big.NewInt(674238462))
 	scan = privK.SignPoseidon(big.NewInt(1))
 	fromDB, err := value.Value()
-	assert.NoError(t, err)
-	assert.NoError(t, scan.Scan(fromDB))
+	assert.Nil(t, err)
+	assert.Nil(t, scan.Scan(fromDB))
 	assert.Equal(t, value, scan)
 }
 
@@ -157,8 +168,8 @@ func TestPubKeyScannerValuer(t *testing.T) {
 	value = pubKValue
 	scan = pubKScan
 	fromDB, err := value.Value()
-	assert.NoError(t, err)
-	assert.NoError(t, scan.Scan(fromDB))
+	assert.Nil(t, err)
+	assert.Nil(t, scan.Scan(fromDB))
 	assert.Equal(t, value, scan)
 }
 
