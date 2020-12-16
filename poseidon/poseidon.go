@@ -9,9 +9,9 @@ import (
 	"github.com/iden3/go-iden3-crypto/utils"
 )
 
-const NROUNDSF = 8
+const NROUNDSF = 8 //nolint:golint
 
-var NROUNDSP = []int{56, 57, 56, 60, 60, 63, 64, 63}
+var NROUNDSP = []int{56, 57, 56, 60, 60, 63, 64, 63} //nolint:golint
 
 func zero() *ff.Element {
 	return ff.NewElement()

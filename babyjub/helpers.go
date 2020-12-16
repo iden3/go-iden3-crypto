@@ -1,8 +1,12 @@
 package babyjub
 
 import (
-	"github.com/dchest/blake512" // I have personally reviewed that this module doesn't do anything suspicious
+	"github.com/dchest/blake512"
 )
+
+// Note on dchest/blake512: This specific blake512 module is compatible with
+// the version of Blake512 used at circomlib, and this module has been reviewed
+// to don't be doing do anything suspicious.
 
 // Blake512 performs the blake-512 hash over the buffer m.  Note that this is
 // the original blake from the SHA3 competition and not the new blake2 version.

@@ -59,7 +59,8 @@ type PointProjective struct {
 
 // NewPointProjective creates a new Point in projective coordinates.
 func NewPointProjective() *PointProjective {
-	return &PointProjective{X: ff.NewElement().SetZero(), Y: ff.NewElement().SetOne(), Z: ff.NewElement().SetOne()}
+	return &PointProjective{X: ff.NewElement().SetZero(),
+		Y: ff.NewElement().SetOne(), Z: ff.NewElement().SetOne()}
 }
 
 // Affine returns the Point from the projective representation
@@ -84,19 +85,21 @@ func (p *PointProjective) Affine() *Point {
 	}
 }
 
-// Add computes the addition of two points in projective coordinates representation
-func (res *PointProjective) Add(p *PointProjective, q *PointProjective) *PointProjective {
-	// add-2008-bbjlp https://hyperelliptic.org/EFD/g1p/auto-twisted-projective.html#doubling-dbl-2008-bbjlp
-	a := ff.NewElement().Mul(p.Z, q.Z)
+// Add computes the addition of two points in projective coordinates
+// representation
+func (p *PointProjective) Add(q *PointProjective, o *PointProjective) *PointProjective {
+	// add-2008-bbjlp
+	// https://hyperelliptic.org/EFD/g1p/auto-twisted-projective.html#doubling-dbl-2008-bbjlp
+	a := ff.NewElement().Mul(q.Z, o.Z)
 	b := ff.NewElement().Square(a)
-	c := ff.NewElement().Mul(p.X, q.X)
-	d := ff.NewElement().Mul(p.Y, q.Y)
+	c := ff.NewElement().Mul(q.X, o.X)
+	d := ff.NewElement().Mul(q.Y, o.Y)
 	e := ff.NewElement().Mul(Dff, c)
 	e.MulAssign(d)
 	f := ff.NewElement().Sub(b, e)
 	g := ff.NewElement().Add(b, e)
-	x1y1 := ff.NewElement().Add(p.X, p.Y)
-	x2y2 := ff.NewElement().Add(q.X, q.Y)
+	x1y1 := ff.NewElement().Add(q.X, q.Y)
+	x2y2 := ff.NewElement().Add(o.X, o.Y)
 	x3 := ff.NewElement().Mul(x1y1, x2y2)
 	x3.SubAssign(c)
 	x3.SubAssign(d)
@@ -108,10 +111,10 @@ func (res *PointProjective) Add(p *PointProjective, q *PointProjective) *PointPr
 	y3.MulAssign(g)
 	z3 := ff.NewElement().Mul(f, g)
 
-	res.X = x3
-	res.Y = y3
-	res.Z = z3
-	return res
+	p.X = x3
+	p.Y = y3
+	p.Z = z3
+	return p
 }
 
 // Point represents a point of the babyjub curve.
@@ -141,15 +144,15 @@ func (p *Point) Projective() *PointProjective {
 	}
 }
 
-// Mul multiplies the Point p by the scalar s and stores the result in res,
+// Mul multiplies the Point q by the scalar s and stores the result in p,
 // which is also returned.
-func (res *Point) Mul(s *big.Int, p *Point) *Point {
+func (p *Point) Mul(s *big.Int, q *Point) *Point {
 	resProj := &PointProjective{
 		X: ff.NewElement().SetZero(),
 		Y: ff.NewElement().SetOne(),
 		Z: ff.NewElement().SetOne(),
 	}
-	exp := p.Projective()
+	exp := q.Projective()
 
 	for i := 0; i < s.BitLen(); i++ {
 		if s.Bit(i) == 1 {
@@ -157,8 +160,8 @@ func (res *Point) Mul(s *big.Int, p *Point) *Point {
 		}
 		exp = exp.Add(exp, exp)
 	}
-	res = resProj.Affine()
-	return res
+	p = resProj.Affine()
+	return p
 }
 
 // InCurve returns true when the Point p is in the babyjub curve.
@@ -200,10 +203,11 @@ func PointCoordSign(c *big.Int) bool {
 	return c.Cmp(new(big.Int).Rsh(constants.Q, 1)) == 1
 }
 
+// PackPoint packs a point into a 32 byte array
 func PackPoint(ay *big.Int, sign bool) [32]byte {
 	leBuf := utils.BigIntLEBytes(ay)
 	if sign {
-		leBuf[31] = leBuf[31] | 0x80
+		leBuf[31] = leBuf[31] | 0x80 //nolint:gomnd
 	}
 	return leBuf
 }
@@ -219,9 +223,9 @@ func (p *Point) Compress() [32]byte {
 // Point.  Returns error if the compressed Point is invalid.
 func (p *Point) Decompress(leBuf [32]byte) (*Point, error) {
 	sign := false
-	if (leBuf[31] & 0x80) != 0x00 {
+	if (leBuf[31] & 0x80) != 0x00 { //nolint:gomnd
 		sign = true
-		leBuf[31] = leBuf[31] & 0x7F
+		leBuf[31] = leBuf[31] & 0x7F //nolint:gomnd
 	}
 	utils.SetBigIntFromLEBytes(p.Y, leBuf[:])
 	return PointFromSignAndY(sign, p.Y)

@@ -1,15 +1,16 @@
+// Package babyjub eddsa implements the EdDSA over the BabyJubJub curve
+//nolint:gomnd
 package babyjub
 
 import (
 	"crypto/rand"
 	"database/sql/driver"
 	"fmt"
+	"math/big"
 
 	"github.com/iden3/go-iden3-crypto/mimc7"
 	"github.com/iden3/go-iden3-crypto/poseidon"
 	"github.com/iden3/go-iden3-crypto/utils"
-
-	"math/big"
 )
 
 // pruneBuffer prunes the buffer during key generation according to RFC 8032.
@@ -55,7 +56,7 @@ func SkToBigInt(k *PrivateKey) *big.Int {
 	return s
 }
 
-// Pub returns the public key corresponding to a private key.
+// Public returns the public key corresponding to a private key.
 func (k *PrivateKey) Public() *PublicKey {
 	return k.Scalar().Public()
 }
@@ -69,8 +70,8 @@ func NewPrivKeyScalar(s *big.Int) *PrivKeyScalar {
 	return &sk
 }
 
-// Pub returns the public key corresponding to the scalar value s of a private
-// key.
+// Public returns the public key corresponding to the scalar value s of a
+// private key.
 func (s *PrivKeyScalar) Public() *PublicKey {
 	p := NewPoint().Mul((*big.Int)(s), B8)
 	pk := PublicKey(*p)
@@ -85,16 +86,19 @@ func (s *PrivKeyScalar) BigInt() *big.Int {
 // PublicKey represents an EdDSA public key, which is a curve point.
 type PublicKey Point
 
+// MarshalText implements the marshaler for PublicKey
 func (pk PublicKey) MarshalText() ([]byte, error) {
 	pkc := pk.Compress()
 	return utils.Hex(pkc[:]).MarshalText()
 }
 
+// String returns the string representation of the PublicKey
 func (pk PublicKey) String() string {
 	pkc := pk.Compress()
 	return utils.Hex(pkc[:]).String()
 }
 
+// UnmarshalText implements the unmarshaler for the PublicKey
 func (pk *PublicKey) UnmarshalText(h []byte) error {
 	var pkc PublicKeyComp
 	if err := utils.HexDecodeInto(pkc[:], h); err != nil {
@@ -109,24 +113,35 @@ func (pk *PublicKey) UnmarshalText(h []byte) error {
 }
 
 // Point returns the Point corresponding to a PublicKey.
-func (p *PublicKey) Point() *Point {
-	return (*Point)(p)
+func (pk *PublicKey) Point() *Point {
+	return (*Point)(pk)
 }
 
 // PublicKeyComp represents a compressed EdDSA Public key; it's a compressed curve
 // point.
 type PublicKeyComp [32]byte
 
-func (buf PublicKeyComp) MarshalText() ([]byte, error)  { return utils.Hex(buf[:]).MarshalText() }
-func (buf PublicKeyComp) String() string                { return utils.Hex(buf[:]).String() }
-func (buf *PublicKeyComp) UnmarshalText(h []byte) error { return utils.HexDecodeInto(buf[:], h) }
-
-func (p *PublicKey) Compress() PublicKeyComp {
-	return PublicKeyComp((*Point)(p).Compress())
+// MarshalText implements the marshaler for the PublicKeyComp
+func (pkComp PublicKeyComp) MarshalText() ([]byte, error) {
+	return utils.Hex(pkComp[:]).MarshalText()
 }
 
-func (p *PublicKeyComp) Decompress() (*PublicKey, error) {
-	point, err := NewPoint().Decompress(*p)
+// String returns the string representation of the PublicKeyComp
+func (pkComp PublicKeyComp) String() string { return utils.Hex(pkComp[:]).String() }
+
+// UnmarshalText implements the unmarshaler for the PublicKeyComp
+func (pkComp *PublicKeyComp) UnmarshalText(h []byte) error {
+	return utils.HexDecodeInto(pkComp[:], h)
+}
+
+// Compress returns the PublicKeyCompr for the given PublicKey
+func (pk *PublicKey) Compress() PublicKeyComp {
+	return PublicKeyComp((*Point)(pk).Compress())
+}
+
+// Decompress returns the PublicKey for the given PublicKeyComp
+func (pkComp *PublicKeyComp) Decompress() (*PublicKey, error) {
+	point, err := NewPoint().Decompress(*pkComp)
 	if err != nil {
 		return nil, err
 	}
@@ -143,9 +158,18 @@ type Signature struct {
 // SignatureComp represents a compressed EdDSA signature.
 type SignatureComp [64]byte
 
-func (buf SignatureComp) MarshalText() ([]byte, error)  { return utils.Hex(buf[:]).MarshalText() }
-func (buf SignatureComp) String() string                { return utils.Hex(buf[:]).String() }
-func (buf *SignatureComp) UnmarshalText(h []byte) error { return utils.HexDecodeInto(buf[:], h) }
+// MarshalText implements the marshaler for the SignatureComp
+func (sComp SignatureComp) MarshalText() ([]byte, error) {
+	return utils.Hex(sComp[:]).MarshalText()
+}
+
+// String returns the string representation of the SignatureComp
+func (sComp SignatureComp) String() string { return utils.Hex(sComp[:]).String() }
+
+// UnmarshalText implements the unmarshaler for the SignatureComp
+func (sComp *SignatureComp) UnmarshalText(h []byte) error {
+	return utils.HexDecodeInto(sComp[:], h)
+}
 
 // Compress an EdDSA signature by concatenating the compression of
 // the point R8 and the Little-Endian encoding of S.
@@ -173,12 +197,12 @@ func (s *Signature) Decompress(buf [64]byte) (*Signature, error) {
 
 // Decompress a compressed signature.  Returns error if the Point decompression
 // fails.
-func (s *SignatureComp) Decompress() (*Signature, error) {
-	return new(Signature).Decompress(*s)
+func (sComp *SignatureComp) Decompress() (*Signature, error) {
+	return new(Signature).Decompress(*sComp)
 }
 
 // Scan implements Scanner for database/sql.
-func (s *SignatureComp) Scan(src interface{}) error {
+func (sComp *SignatureComp) Scan(src interface{}) error {
 	srcB, ok := src.([]byte)
 	if !ok {
 		return fmt.Errorf("can't scan %T into Signature", src)
@@ -186,13 +210,13 @@ func (s *SignatureComp) Scan(src interface{}) error {
 	if len(srcB) != 64 {
 		return fmt.Errorf("can't scan []byte of len %d into Signature, want %d", len(srcB), 64)
 	}
-	copy(s[:], srcB[:])
+	copy(sComp[:], srcB[:])
 	return nil
 }
 
 // Value implements valuer for database/sql.
-func (s SignatureComp) Value() (driver.Value, error) {
-	return s[:], nil
+func (sComp SignatureComp) Value() (driver.Value, error) {
+	return sComp[:], nil
 }
 
 // Scan implements Scanner for database/sql.
@@ -243,8 +267,8 @@ func (k *PrivateKey) SignMimc7(msg *big.Int) *Signature {
 
 // VerifyMimc7 verifies the signature of a message encoded as a big.Int in Zq
 // using blake-512 hash for buffer hashing and mimc7 for big.Int hashing.
-func (p *PublicKey) VerifyMimc7(msg *big.Int, sig *Signature) bool {
-	hmInput := []*big.Int{sig.R8.X, sig.R8.Y, p.X, p.Y, msg}
+func (pk *PublicKey) VerifyMimc7(msg *big.Int, sig *Signature) bool {
+	hmInput := []*big.Int{sig.R8.X, sig.R8.Y, pk.X, pk.Y, msg}
 	hm, err := mimc7.Hash(hmInput, nil) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
 		return false
@@ -253,7 +277,7 @@ func (p *PublicKey) VerifyMimc7(msg *big.Int, sig *Signature) bool {
 	left := NewPoint().Mul(sig.S, B8) // left = s * 8 * B
 	r1 := big.NewInt(8)
 	r1.Mul(r1, hm)
-	right := NewPoint().Mul(r1, p.Point())
+	right := NewPoint().Mul(r1, pk.Point())
 	rightProj := right.Projective()
 	rightProj.Add(sig.R8.Projective(), rightProj) // right = 8 * R + 8 * hm * A
 	right = rightProj.Affine()
@@ -289,8 +313,8 @@ func (k *PrivateKey) SignPoseidon(msg *big.Int) *Signature {
 
 // VerifyPoseidon verifies the signature of a message encoded as a big.Int in Zq
 // using blake-512 hash for buffer hashing and Poseidon for big.Int hashing.
-func (p *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
-	hmInput := []*big.Int{sig.R8.X, sig.R8.Y, p.X, p.Y, msg}
+func (pk *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
+	hmInput := []*big.Int{sig.R8.X, sig.R8.Y, pk.X, pk.Y, msg}
 	hm, err := poseidon.Hash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
 		return false
@@ -299,7 +323,7 @@ func (p *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
 	left := NewPoint().Mul(sig.S, B8) // left = s * 8 * B
 	r1 := big.NewInt(8)
 	r1.Mul(r1, hm)
-	right := NewPoint().Mul(r1, p.Point())
+	right := NewPoint().Mul(r1, pk.Point())
 	rightProj := right.Projective()
 	rightProj.Add(sig.R8.Projective(), rightProj) // right = 8 * R + 8 * hm * A
 	right = rightProj.Affine()
@@ -307,7 +331,7 @@ func (p *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
 }
 
 // Scan implements Scanner for database/sql.
-func (p *PublicKey) Scan(src interface{}) error {
+func (pk *PublicKey) Scan(src interface{}) error {
 	srcB, ok := src.([]byte)
 	if !ok {
 		return fmt.Errorf("can't scan %T into PublicKey", src)
@@ -321,12 +345,12 @@ func (p *PublicKey) Scan(src interface{}) error {
 	if err != nil {
 		return err
 	}
-	*p = *decomp
+	*pk = *decomp
 	return nil
 }
 
 // Value implements valuer for database/sql.
-func (p PublicKey) Value() (driver.Value, error) {
-	comp := p.Compress()
+func (pk PublicKey) Value() (driver.Value, error) {
+	comp := pk.Compress()
 	return comp[:], nil
 }
