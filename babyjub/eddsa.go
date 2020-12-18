@@ -354,3 +354,21 @@ func (pk PublicKey) Value() (driver.Value, error) {
 	comp := pk.Compress()
 	return comp[:], nil
 }
+
+// Scan implements Scanner for database/sql.
+func (pkComp *PublicKeyComp) Scan(src interface{}) error {
+	srcB, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("can't scan %T into PublicKeyComp", src)
+	}
+	if len(srcB) != 32 {
+		return fmt.Errorf("can't scan []byte of len %d into PublicKeyComp, want %d", len(srcB), 32)
+	}
+	copy(pkComp[:], srcB)
+	return nil
+}
+
+// Value implements valuer for database/sql.
+func (pkComp PublicKeyComp) Value() (driver.Value, error) {
+	return pkComp[:], nil
+}
