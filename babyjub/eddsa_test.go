@@ -1,13 +1,12 @@
 package babyjub
 
 import (
+	"database/sql"
+	"database/sql/driver"
 	"encoding/hex"
 	"fmt"
 	"math/big"
 	"testing"
-
-	"database/sql"
-	"database/sql/driver"
 
 	"github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-iden3-crypto/utils"
@@ -27,7 +26,8 @@ func TestPublicKey(t *testing.T) {
 
 func TestSignVerifyMimc7(t *testing.T) {
 	var k PrivateKey
-	_, err := hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	_, err := hex.Decode(k[:],
+		[]byte("0001020304050607080900010203040506070809000102030405060708090001"))
 	require.Nil(t, err)
 	msgBuf, err := hex.DecodeString("00010203040506070809")
 	if err != nil {
@@ -72,7 +72,8 @@ func TestSignVerifyMimc7(t *testing.T) {
 
 func TestSignVerifyPoseidon(t *testing.T) {
 	var k PrivateKey
-	_, err := hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	_, err := hex.Decode(k[:],
+		[]byte("0001020304050607080900010203040506070809000102030405060708090001"))
 	require.Nil(t, err)
 	msgBuf, err := hex.DecodeString("00010203040506070809")
 	if err != nil {
@@ -117,7 +118,8 @@ func TestSignVerifyPoseidon(t *testing.T) {
 
 func TestCompressDecompress(t *testing.T) {
 	var k PrivateKey
-	_, err := hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	_, err := hex.Decode(k[:],
+		[]byte("0001020304050607080900010203040506070809000102030405060708090001"))
 	require.Nil(t, err)
 	pk := k.Public()
 	for i := 0; i < 64; i++ {
@@ -175,7 +177,8 @@ func TestPubKeyScannerValuer(t *testing.T) {
 
 func BenchmarkBabyjubEddsa(b *testing.B) {
 	var k PrivateKey
-	_, err := hex.Decode(k[:], []byte("0001020304050607080900010203040506070809000102030405060708090001"))
+	_, err := hex.Decode(k[:],
+		[]byte("0001020304050607080900010203040506070809000102030405060708090001"))
 	require.Nil(b, err)
 	pk := k.Public()
 

@@ -3,13 +3,10 @@ package constants
 import (
 	"fmt"
 	"math/big"
-
-	"github.com/iden3/go-iden3-crypto/ff"
 )
 
 // Q is the order of the integer field (Zq) that fits inside the SNARK.
 var Q *big.Int
-var QE *ff.Element
 
 // Zero is 0.
 var Zero *big.Int

@@ -1,0 +1,17 @@
+issues:
+        max-same-issues: 0
+        exclude-use-default: false
+linters:
+        enable:
+        - whitespace
+        - gosec
+        - gci
+        - misspell
+        - gomnd
+        - gofmt
+        - goimports
+        - lll
+        - golint
+linters-settings:
+        lll:
+                line-length: 100

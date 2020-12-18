@@ -77,7 +77,7 @@ func HexDecodeInto(dst []byte, h []byte) error {
 		h = h[2:]
 	}
 	if len(h)/2 != len(dst) {
-		return fmt.Errorf("expected %v bytes in hex string, got %v", len(dst), len(h)/2)
+		return fmt.Errorf("expected %v bytes in hex string, got %v", len(dst), len(h)/2) //nolint:gomnd
 	}
 	n, err := hex.Decode(dst, h)
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	"github.com/iden3/go-iden3-crypto/utils"
 )
 
+// SEED defines the seed used to constants
 const SEED = "mimc"
 
 var constants = generateConstantsData()
@@ -47,8 +48,9 @@ func getConstants(seed string, nRounds int) []*ff.Element {
 	return cts
 }
 
-// MIMC7HashGeneric performs the MIMC7 hash over a *big.Int, in a generic way, where it can be specified the Finite Field over R, and the number of rounds
-func MIMC7HashGeneric(xInBI, kBI *big.Int, nRounds int) *big.Int {
+// MIMC7HashGeneric performs the MIMC7 hash over a *big.Int, in a generic way,
+// where it can be specified the Finite Field over R, and the number of rounds
+func MIMC7HashGeneric(xInBI, kBI *big.Int, nRounds int) *big.Int { //nolint:golint
 	xIn := ff.NewElement().SetBigInt(xInBI)
 	k := ff.NewElement().SetBigInt(kBI)
 
@@ -72,7 +74,8 @@ func MIMC7HashGeneric(xInBI, kBI *big.Int, nRounds int) *big.Int {
 	return res
 }
 
-// HashGeneric performs the MIMC7 hash over a *big.Int array, in a generic way, where it can be specified the Finite Field over R, and the number of rounds
+// HashGeneric performs the MIMC7 hash over a *big.Int array, in a generic way,
+// where it can be specified the Finite Field over R, and the number of rounds
 func HashGeneric(iv *big.Int, arr []*big.Int, nRounds int) (*big.Int, error) {
 	if !utils.CheckBigIntArrayInField(arr) {
 		return nil, errors.New("inputs values not inside Finite Field")
@@ -88,8 +91,9 @@ func HashGeneric(iv *big.Int, arr []*big.Int, nRounds int) (*big.Int, error) {
 	return r, nil
 }
 
-// MIMC7Hash performs the MIMC7 hash over a *big.Int, using the Finite Field over R and the number of rounds setted in the `constants` variable
-func MIMC7Hash(xInBI, kBI *big.Int) *big.Int {
+// MIMC7Hash performs the MIMC7 hash over a *big.Int, using the Finite Field
+// over R and the number of rounds setted in the `constants` variable
+func MIMC7Hash(xInBI, kBI *big.Int) *big.Int { //nolint:golint
 	xIn := ff.NewElement().SetBigInt(xInBI)
 	k := ff.NewElement().SetBigInt(kBI)
 

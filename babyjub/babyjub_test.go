@@ -44,7 +44,9 @@ func TestAdd2(t *testing.T) {
 		c.Y.String())
 
 	d := NewPointProjective().Add(c.Projective(), c.Projective()).Affine()
-	assert.Equal(t, "2f6458832049e917c95867185a96621336df33e13c98e81d1ef4928cdbb77772", hex.EncodeToString(d.X.Bytes()))
+	assert.Equal(t,
+		"2f6458832049e917c95867185a96621336df33e13c98e81d1ef4928cdbb77772",
+		hex.EncodeToString(d.X.Bytes()))
 
 	// Projective
 	aP := a.Projective()
@@ -52,7 +54,6 @@ func TestAdd2(t *testing.T) {
 	cP := NewPointProjective().Add(aP, bP)
 	c2 := cP.Affine()
 	assert.Equal(t, c, c2)
-
 }
 
 func TestAdd3(t *testing.T) {
@@ -225,7 +226,9 @@ func TestCompressDecompress1(t *testing.T) {
 	p := &Point{X: x, Y: y}
 
 	buf := p.Compress()
-	assert.Equal(t, "53b81ed5bffe9545b54016234682e7b2f699bd42a5e9eae27ff4051bc698ce85", hex.EncodeToString(buf[:]))
+	assert.Equal(t,
+		"53b81ed5bffe9545b54016234682e7b2f699bd42a5e9eae27ff4051bc698ce85",
+		hex.EncodeToString(buf[:]))
 
 	p2, err := NewPoint().Decompress(buf)
 	assert.Equal(t, nil, err)
@@ -241,7 +244,9 @@ func TestCompressDecompress2(t *testing.T) {
 	p := &Point{X: x, Y: y}
 
 	buf := p.Compress()
-	assert.Equal(t, "e114eb17eddf794f063a68fecac515e3620e131976108555735c8b0773929709", hex.EncodeToString(buf[:]))
+	assert.Equal(t,
+		"e114eb17eddf794f063a68fecac515e3620e131976108555735c8b0773929709",
+		hex.EncodeToString(buf[:]))
 
 	p2, err := NewPoint().Decompress(buf)
 	assert.Equal(t, nil, err)
@@ -263,7 +268,7 @@ func TestCompressDecompressRnd(t *testing.T) {
 func BenchmarkBabyjub(b *testing.B) {
 	const n = 256
 
-	rnd := rand.New(rand.NewSource(42))
+	rnd := rand.New(rand.NewSource(42)) //nolint:gosec
 
 	var badpoints [n]*Point
 	for i := 0; i < n; i++ {
