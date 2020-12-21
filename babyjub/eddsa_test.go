@@ -160,7 +160,7 @@ func TestSignatureScannerValuer(t *testing.T) {
 	assert.Equal(t, value, scan)
 }
 
-func TestPubKeyScannerValuer(t *testing.T) {
+func TestPublicKeyScannerValuer(t *testing.T) {
 	privKValue := NewRandPrivKey()
 	pubKValue := privKValue.Public()
 	privKScan := NewRandPrivKey()
@@ -169,6 +169,21 @@ func TestPubKeyScannerValuer(t *testing.T) {
 	var scan sql.Scanner
 	value = pubKValue
 	scan = pubKScan
+	fromDB, err := value.Value()
+	assert.Nil(t, err)
+	assert.Nil(t, scan.Scan(fromDB))
+	assert.Equal(t, value, scan)
+}
+
+func TestPublicKeyCompScannerValuer(t *testing.T) {
+	privKValue := NewRandPrivKey()
+	pubKCompValue := privKValue.Public().Compress()
+	privKScan := NewRandPrivKey()
+	pubKCompScan := privKScan.Public().Compress()
+	var value driver.Valuer
+	var scan sql.Scanner
+	value = &pubKCompValue
+	scan = &pubKCompScan
 	fromDB, err := value.Value()
 	assert.Nil(t, err)
 	assert.Nil(t, scan.Scan(fromDB))
