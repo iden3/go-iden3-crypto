@@ -203,37 +203,24 @@ func PointCoordSign(c *big.Int) bool {
 	return c.Cmp(new(big.Int).Rsh(constants.Q, 1)) == 1
 }
 
-// PackPoint packs a point into a 32 byte array
-func PackPoint(ay *big.Int, sign bool) [32]byte {
-	leBuf := utils.BigIntLEBytes(ay)
+// PackSignY packs the given sign and the coordinate Y of a point into a 32
+// byte array. This method does not check that the values belong to a valid
+// Point in the curve.
+func PackSignY(sign bool, y *big.Int) [32]byte {
+	leBuf := utils.BigIntLEBytes(y)
 	if sign {
 		leBuf[31] = leBuf[31] | 0x80 //nolint:gomnd
 	}
 	return leBuf
 }
 
-// Compress the point into a 32 byte array that contains the y coordinate in
-// little endian and the sign of the x coordinate.
-func (p *Point) Compress() [32]byte {
-	sign := PointCoordSign(p.X)
-	return PackPoint(p.Y, sign)
-}
-
-// Decompress a compressed Point into p, and also returns the decompressed
-// Point.  Returns error if the compressed Point is invalid.
-func (p *Point) Decompress(leBuf [32]byte) (*Point, error) {
-	var sign bool
-	sign, p.Y = CompressedPointToSignAndY(leBuf)
-	return PointFromSignAndY(sign, p.Y)
-}
-
-// CompressedPointToSignAndY returns the sign and coordinate Y from a given
-// compressed point. This method does not check that the Point belongs to the
-// BabyJubJub curve, thus does not return error in such case. This method is
-// intended to obtain the sign and the Y coordinate without checking if the
-// point belongs to the curve, if the objective is to uncompress a point
-// Decompress method should be used instead.
-func CompressedPointToSignAndY(leBuf [32]byte) (bool, *big.Int) {
+// UnpackSignY returns the sign and coordinate Y from a given compressed point.
+// This method does not check that the Point belongs to the BabyJubJub curve,
+// thus does not return error in such case. This method is intended to obtain
+// the sign and the Y coordinate without checking if the point belongs to the
+// curve, if the objective is to uncompress a point, Decompress method should
+// be used instead.
+func UnpackSignY(leBuf [32]byte) (bool, *big.Int) {
 	sign := false
 	y := big.NewInt(0)
 	if (leBuf[31] & 0x80) != 0x00 { //nolint:gomnd
@@ -242,6 +229,21 @@ func CompressedPointToSignAndY(leBuf [32]byte) (bool, *big.Int) {
 	}
 	utils.SetBigIntFromLEBytes(y, leBuf[:])
 	return sign, y
+}
+
+// Compress the point into a 32 byte array that contains the y coordinate in
+// little endian and the sign of the x coordinate.
+func (p *Point) Compress() [32]byte {
+	sign := PointCoordSign(p.X)
+	return PackSignY(sign, p.Y)
+}
+
+// Decompress a compressed Point into p, and also returns the decompressed
+// Point.  Returns error if the compressed Point is invalid.
+func (p *Point) Decompress(leBuf [32]byte) (*Point, error) {
+	var sign bool
+	sign, p.Y = UnpackSignY(leBuf)
+	return PointFromSignAndY(sign, p.Y)
 }
 
 // PointFromSignAndY returns a Point from a Sign and the Y coordinate

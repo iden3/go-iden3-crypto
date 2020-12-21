@@ -218,6 +218,26 @@ func TestPointFromSignAndy(t *testing.T) {
 	assert.Equal(t, p.Y.String(), p2.Y.String())
 }
 
+func TestPackAndUnpackSignY(t *testing.T) {
+	x := utils.NewIntFromString(
+		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
+	y := utils.NewIntFromString(
+		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
+	p := &Point{X: x, Y: y}
+	pComp := p.Compress()
+
+	s, y := UnpackSignY(pComp)
+
+	pComp2 := PackSignY(s, y)
+	assert.Equal(t, pComp, pComp2)
+
+	emptyPointComp := [32]byte{}
+	s, y = UnpackSignY(emptyPointComp)
+
+	pComp2 = PackSignY(s, y)
+	assert.Equal(t, emptyPointComp, pComp2)
+}
+
 func TestCompressDecompress1(t *testing.T) {
 	x := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
