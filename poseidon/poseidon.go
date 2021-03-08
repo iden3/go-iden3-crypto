@@ -47,7 +47,7 @@ func mix(state []*ff.Element, newState []*ff.Element, m [][]*ff.Element) {
 	for i := 0; i < len(state); i++ {
 		newState[i].SetUint64(0)
 		for j := 0; j < len(state); j++ {
-			mul.Mul(m[j][i], state[j])
+			mul.Mul(m[i][j], state[j])
 			newState[i].Add(newState[i], mul)
 		}
 	}
@@ -64,8 +64,8 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 	}
 	inp := utils.BigIntArrayToElementArray(inpBI[:])
 	state := make([]*ff.Element, t)
-	copy(state[:], inp[:])
-	state[len(state)-1] = zero()
+	state[0] = zero()
+	copy(state[1:], inp[:])
 
 	nRoundsF := NROUNDSF
 	nRoundsP := NROUNDSP[t-2]
@@ -79,10 +79,8 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 	for i := 0; i < nRoundsF+nRoundsP; i++ {
 		ark(state, c.c[t-2], i*t)
 		sbox(nRoundsF, nRoundsP, state, i)
-		if i < nRoundsF+nRoundsP-1 {
-			mix(state, newState, c.m[t-2])
-			state, newState = newState, state
-		}
+		mix(state, newState, c.m[t-2])
+		state, newState = newState, state
 	}
 	rE := state[0]
 	r := big.NewInt(0)
