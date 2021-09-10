@@ -27,7 +27,7 @@ func ark(state []*ff.Element, c []*ff.Element, it int) {
 // exp5 performs x^5 mod p
 // https://eprint.iacr.org/2019/458.pdf page 8
 func exp5(a *ff.Element) {
-	a.Exp(*a, 5)
+	a.Exp(*a, 5) //nolint:gomnd
 }
 
 // sbox https://eprint.iacr.org/2019/458.pdf page 6
@@ -57,7 +57,7 @@ func mix(state []*ff.Element, newState []*ff.Element, m [][]*ff.Element) {
 func Hash(inpBI []*big.Int) (*big.Int, error) {
 	t := len(inpBI) + 1
 	if len(inpBI) == 0 || len(inpBI) >= len(NROUNDSP)-1 {
-		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP)-2)
+		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP)-2) //nolint:gomnd,lll
 	}
 	if !utils.CheckBigIntArrayInField(inpBI[:]) {
 		return nil, errors.New("inputs values not inside Finite Field")

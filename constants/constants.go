@@ -24,7 +24,7 @@ func init() {
 
 	qString := "21888242871839275222246405745257275088548364400416034343698204186575808495617"
 	var ok bool
-	Q, ok = new(big.Int).SetString(qString, 10)
+	Q, ok = new(big.Int).SetString(qString, 10) //nolint:gomnd
 	if !ok {
 		panic(fmt.Sprintf("Bad base 10 string %s", qString))
 	}
