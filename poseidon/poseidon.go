@@ -11,7 +11,7 @@ import (
 
 const NROUNDSF = 8 //nolint:golint
 
-var NROUNDSP = []int{56, 57, 56, 60, 60, 63, 64, 63} //nolint:golint
+var NROUNDSP = []int{56, 57, 56, 60, 60, 63, 64, 63, 60, 66, 60, 65, 70, 60, 64, 68} //nolint:golint
 
 func zero() *ff.Element {
 	return ff.NewElement()
@@ -57,7 +57,7 @@ func mix(state []*ff.Element, newState []*ff.Element, m [][]*ff.Element) {
 func Hash(inpBI []*big.Int) (*big.Int, error) {
 	t := len(inpBI) + 1
 	if len(inpBI) == 0 || len(inpBI) >= len(NROUNDSP)-1 {
-		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP)-1)
+		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP)-2)
 	}
 	if !utils.CheckBigIntArrayInField(inpBI[:]) {
 		return nil, errors.New("inputs values not inside Finite Field")

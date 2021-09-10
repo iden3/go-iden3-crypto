@@ -72,16 +72,16 @@ func TestErrorInputs(t *testing.T) {
 	b1 := big.NewInt(1)
 	b2 := big.NewInt(2)
 
-	_, err := Hash([]*big.Int{b1, b2, b0, b0, b0, b0})
+	_, err := Hash([]*big.Int{b1, b2, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0})
 	assert.Nil(t, err)
 
-	_, err = Hash([]*big.Int{b1, b2, b0, b0, b0, b0, b0})
+	_, err = Hash([]*big.Int{b1, b2, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0})
 	assert.NotNil(t, err)
-	assert.Equal(t, "invalid inputs length 7, max 7", err.Error())
+	assert.Equal(t, "invalid inputs length 15, max 14", err.Error())
 
-	_, err = Hash([]*big.Int{b1, b2, b0, b0, b0, b0, b0, b0})
+	_, err = Hash([]*big.Int{b1, b2, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0})
 	assert.NotNil(t, err)
-	assert.Equal(t, "invalid inputs length 8, max 7", err.Error())
+	assert.Equal(t, "invalid inputs length 16, max 14", err.Error())
 }
 
 func BenchmarkPoseidonHash(b *testing.B) {
