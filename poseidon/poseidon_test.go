@@ -21,6 +21,18 @@ func TestPoseidonHash(t *testing.T) {
 	b0 := big.NewInt(0)
 	b1 := big.NewInt(1)
 	b2 := big.NewInt(2)
+	b3 := big.NewInt(3)
+	b4 := big.NewInt(4)
+	b5 := big.NewInt(5)
+	b6 := big.NewInt(6)
+	b7 := big.NewInt(7)
+	b8 := big.NewInt(8)
+	b9 := big.NewInt(9)
+	b10 := big.NewInt(10)
+	b11 := big.NewInt(11)
+	b12 := big.NewInt(12)
+	b13 := big.NewInt(13)
+	b14 := big.NewInt(14)
 
 	h, err := Hash([]*big.Int{b1})
 	assert.Nil(t, err)
@@ -45,8 +57,6 @@ func TestPoseidonHash(t *testing.T) {
 		"15336558801450556532856248569924170992202208561737609669134139141992924267169",
 		h.String())
 
-	b3 := big.NewInt(3)
-	b4 := big.NewInt(4)
 	h, err = Hash([]*big.Int{b3, b4, b0, b0, b0})
 	assert.Nil(t, err)
 	assert.Equal(t,
@@ -58,12 +68,22 @@ func TestPoseidonHash(t *testing.T) {
 		"12263118664590987767234828103155242843640892839966517009184493198782366909018",
 		h.String())
 
-	b5 := big.NewInt(5)
-	b6 := big.NewInt(6)
 	h, err = Hash([]*big.Int{b1, b2, b3, b4, b5, b6})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		"20400040500897583745843009878988256314335038853985262692600694741116813247201",
+		h.String())
+
+	h, err = Hash([]*big.Int{b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14})
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"8354478399926161176778659061636406690034081872658507739535256090879947077494",
+		h.String())
+
+	h, err = Hash([]*big.Int{b1, b2, b3, b4, b5, b6, b7, b8, b9, b0, b0, b0, b0, b0})
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"5540388656744764564518487011617040650780060800286365721923524861648744699539",
 		h.String())
 }
 
