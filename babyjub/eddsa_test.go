@@ -139,7 +139,7 @@ func TestCompressDecompress(t *testing.T) {
 
 func TestSignatureCompScannerValuer(t *testing.T) {
 	privK := NewRandPrivKey()
-	var value driver.Valuer //nolint:gosimple this is done to ensure interface compatibility
+	var value driver.Valuer //nolint:gosimple // this is done to ensure interface compatibility
 	value = privK.SignPoseidon(big.NewInt(674238462)).Compress()
 	scan := privK.SignPoseidon(big.NewInt(1)).Compress()
 	fromDB, err := value.Value()

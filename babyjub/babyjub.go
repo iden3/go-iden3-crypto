@@ -41,7 +41,7 @@ func init() {
 
 	Order = utils.NewIntFromString(
 		"21888242871839275222246405745257275088614511777268538073601725287587578984328")
-	SubOrder = new(big.Int).Rsh(Order, 3)
+	SubOrder = new(big.Int).Rsh(Order, 3) //nolint:gomnd
 
 	B8 = NewPoint()
 	B8.X = utils.NewIntFromString(

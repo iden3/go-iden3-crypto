@@ -10,7 +10,7 @@ import (
 
 const NROUNDSF = 8 //nolint:golint
 
-var NROUNDSP = []int{56, 57, 56, 60, 60, 63, 64, 63} //nolint:golint
+var NROUNDSP = []int{56, 57, 56, 60, 60, 63, 64, 63, 60, 66, 60, 65, 70, 60, 64, 68} //nolint:golint
 
 func zero() *ff.Element {
 	return ff.NewElement()
@@ -19,7 +19,7 @@ func zero() *ff.Element {
 // exp5 performs x^5 mod p
 // https://eprint.iacr.org/2019/458.pdf page 8
 func exp5(a *ff.Element) {
-	a.Exp(*a, 5)
+	a.Exp(*a, 5) //nolint:gomnd
 }
 
 // exp5state perform exp5 for whole state
@@ -57,7 +57,7 @@ func mix(state []*ff.Element, t int, m [][]*ff.Element) []*ff.Element {
 func Hash(inpBI []*big.Int) (*big.Int, error) {
 	t := len(inpBI) + 1
 	if len(inpBI) == 0 || len(inpBI) >= len(NROUNDSP)-1 {
-		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP)-1)
+		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP)-2) //nolint:gomnd,lll
 	}
 	inp := utils.BigIntArrayToElementArray(inpBI[:])
 
