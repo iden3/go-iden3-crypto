@@ -7,6 +7,7 @@ import (
 
 	"github.com/iden3/go-iden3-crypto/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/blake2b"
 )
 
@@ -33,6 +34,8 @@ func TestPoseidonHash(t *testing.T) {
 	b12 := big.NewInt(12)
 	b13 := big.NewInt(13)
 	b14 := big.NewInt(14)
+	b15 := big.NewInt(15)
+	b16 := big.NewInt(16)
 
 	h, err := Hash([]*big.Int{b1})
 	assert.Nil(t, err)
@@ -85,6 +88,18 @@ func TestPoseidonHash(t *testing.T) {
 	assert.Equal(t,
 		"5540388656744764564518487011617040650780060800286365721923524861648744699539",
 		h.String())
+
+	h, err = Hash([]*big.Int{b1, b2, b3, b4, b5, b6, b7, b8, b9, b0, b0, b0, b0, b0, b0, b0})
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"11882816200654282475720830292386643970958445617880627439994635298904836126497",
+		h.String())
+
+	h, err = Hash([]*big.Int{b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16})
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"9989051620750914585850546081941653841776809718687451684622678807385399211877",
+		h.String())
 }
 
 func TestErrorInputs(t *testing.T) {
@@ -92,16 +107,18 @@ func TestErrorInputs(t *testing.T) {
 	b1 := big.NewInt(1)
 	b2 := big.NewInt(2)
 
-	_, err := Hash([]*big.Int{b1, b2, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0})
-	assert.Nil(t, err)
-
-	_, err = Hash([]*big.Int{b1, b2, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0})
-	assert.NotNil(t, err)
-	assert.Equal(t, "invalid inputs length 15, max 14", err.Error())
+	var err error
 
 	_, err = Hash([]*big.Int{b1, b2, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0})
-	assert.NotNil(t, err)
-	assert.Equal(t, "invalid inputs length 16, max 14", err.Error())
+	require.Nil(t, err)
+
+	_, err = Hash([]*big.Int{b1, b2, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0})
+	require.NotNil(t, err)
+	assert.Equal(t, "invalid inputs length 17, max 16", err.Error())
+
+	_, err = Hash([]*big.Int{b1, b2, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0})
+	require.NotNil(t, err)
+	assert.Equal(t, "invalid inputs length 18, max 16", err.Error())
 }
 
 func BenchmarkPoseidonHash(b *testing.B) {

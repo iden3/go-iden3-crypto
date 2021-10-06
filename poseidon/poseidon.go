@@ -56,8 +56,8 @@ func mix(state []*ff.Element, t int, m [][]*ff.Element) []*ff.Element {
 // Hash computes the Poseidon hash for the given inputs
 func Hash(inpBI []*big.Int) (*big.Int, error) {
 	t := len(inpBI) + 1
-	if len(inpBI) == 0 || len(inpBI) >= len(NROUNDSP)-1 {
-		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP)-2) //nolint:gomnd,lll
+	if len(inpBI) == 0 || len(inpBI) > len(NROUNDSP) {
+		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP)) //nolint:gomnd,lll
 	}
 	inp := utils.BigIntArrayToElementArray(inpBI[:])
 
