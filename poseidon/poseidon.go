@@ -53,6 +53,7 @@ func mix(state []*ff.Element, t int, m [][]*ff.Element) []*ff.Element {
 	return newState
 }
 
+// Hash computes the Poseidon hash for the given inputs
 func Hash(inpBI []*big.Int) (*big.Int, error) {
 	t := len(inpBI) + 1
 	if len(inpBI) == 0 || len(inpBI) >= len(NROUNDSP)-1 {
