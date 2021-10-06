@@ -25,64 +25,74 @@ var c *constants
 
 func init() {
 	c = &constants{
-		c: [][]*ff.Element{},
-		m: [][][]*ff.Element{},
+		c: make([][]*ff.Element, len(cs.C)),
+		s: make([][]*ff.Element, len(cs.S)),
+		m: make([][][]*ff.Element, len(cs.M)),
+		p: make([][][]*ff.Element, len(cs.P)),
 	}
 
+	var (
+		cci, csi, cmij, cpij []*ff.Element
+		cmi, cpi             [][]*ff.Element
+
+		b  *big.Int
+		ok bool
+	)
+
 	for i := 0; i < len(cs.C); i++ {
-		var cci []*ff.Element
+		cci = make([]*ff.Element, len(cs.C[i]))
 		for j := 0; j < len(cs.C[i]); j++ {
-			b, ok := new(big.Int).SetString(cs.C[i][j], 16)
+			b, ok = new(big.Int).SetString(cs.C[i][j], 16)
 			if !ok {
 				panic(fmt.Errorf("error parsing constants"))
 			}
-			cci = append(cci, ff.NewElement().SetBigInt(b))
+			cci[j] = ff.NewElement().SetBigInt(b)
 		}
-		c.c = append(c.c, cci)
+		c.c[i] = cci
 	}
 
 	for i := 0; i < len(cs.S); i++ {
-		var csi []*ff.Element
+		csi = make([]*ff.Element, len(cs.S[i]))
 		for j := 0; j < len(cs.S[i]); j++ {
-			b, ok := new(big.Int).SetString(cs.S[i][j], 16)
+			b, ok = new(big.Int).SetString(cs.S[i][j], 16)
 			if !ok {
 				panic(fmt.Errorf("error parsing constants"))
 			}
-			csi = append(csi, ff.NewElement().SetBigInt(b))
+			csi[j] = ff.NewElement().SetBigInt(b)
 		}
-		c.s = append(c.s, csi)
+		c.s[i] = csi
 	}
 
 	for i := 0; i < len(cs.M); i++ {
-		var cmi [][]*ff.Element
+		cmi = make([][]*ff.Element, len(cs.M[i]))
 		for j := 0; j < len(cs.M[i]); j++ {
-			var cmij []*ff.Element
+			cmij = make([]*ff.Element, len(cs.M[i][j]))
 			for k := 0; k < len(cs.M[i][j]); k++ {
-				b, ok := new(big.Int).SetString(cs.M[i][j][k], 16)
+				b, ok = new(big.Int).SetString(cs.M[i][j][k], 16)
 				if !ok {
 					panic(fmt.Errorf("error parsing constants"))
 				}
-				cmij = append(cmij, ff.NewElement().SetBigInt(b))
+				cmij[k] = ff.NewElement().SetBigInt(b)
 			}
-			cmi = append(cmi, cmij)
+			cmi[j] = cmij
 		}
-		c.m = append(c.m, cmi)
+		c.m[i] = cmi
 	}
 
 	for i := 0; i < len(cs.P); i++ {
-		var cpi [][]*ff.Element
+		cpi = make([][]*ff.Element, len(cs.P[i]))
 		for j := 0; j < len(cs.P[i]); j++ {
-			var cpij []*ff.Element
+			cpij = make([]*ff.Element, len(cs.P[i][j]))
 			for k := 0; k < len(cs.P[i][j]); k++ {
-				b, ok := new(big.Int).SetString(cs.P[i][j][k], 16)
+				b, ok = new(big.Int).SetString(cs.P[i][j][k], 16)
 				if !ok {
 					panic(fmt.Errorf("error parsing constants"))
 				}
-				cpij = append(cpij, ff.NewElement().SetBigInt(b))
+				cpij[k] = ff.NewElement().SetBigInt(b)
 			}
-			cpi = append(cpi, cpij)
+			cpi[j] = cpij
 		}
-		c.p = append(c.p, cpi)
+		c.p[i] = cpi
 	}
 }
 
