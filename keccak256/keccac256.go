@@ -8,7 +8,7 @@ import (
 func Hash(data ...[]byte) []byte {
 	hash := sha3.NewLegacyKeccak256()
 	for _, d := range data {
-		hash.Write(d) //nolint:errcheck
+		hash.Write(d) //nolint:errcheck,gosec
 	}
 	return hash.Sum(nil)
 }
