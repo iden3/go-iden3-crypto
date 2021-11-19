@@ -4,9 +4,9 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/crypto"
 	_constants "github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-iden3-crypto/ff"
+	"github.com/iden3/go-iden3-crypto/keccak256"
 	"github.com/iden3/go-iden3-crypto/utils"
 )
 
@@ -25,8 +25,8 @@ type constantsData struct {
 func generateConstantsData() constantsData {
 	var constants constantsData
 
-	constants.seedHash = new(big.Int).SetBytes(crypto.Keccak256([]byte(SEED)))
-	c := new(big.Int).SetBytes(crypto.Keccak256([]byte(SEED + "_iv")))
+	constants.seedHash = new(big.Int).SetBytes(keccak256.Hash([]byte(SEED)))
+	c := new(big.Int).SetBytes(keccak256.Hash([]byte(SEED + "_iv")))
 	constants.iv = new(big.Int).Mod(c, _constants.Q)
 
 	constants.nRounds = 91
@@ -38,9 +38,9 @@ func generateConstantsData() constantsData {
 func getConstants(seed string, nRounds int) []*ff.Element {
 	cts := make([]*ff.Element, nRounds)
 	cts[0] = ff.NewElement()
-	c := new(big.Int).SetBytes(crypto.Keccak256([]byte(SEED)))
+	c := new(big.Int).SetBytes(keccak256.Hash([]byte(SEED)))
 	for i := 1; i < nRounds; i++ {
-		c = new(big.Int).SetBytes(crypto.Keccak256(c.Bytes()))
+		c = new(big.Int).SetBytes(keccak256.Hash(c.Bytes()))
 
 		n := new(big.Int).Mod(c, _constants.Q)
 		cts[i] = ff.NewElement().SetBigInt(n)
