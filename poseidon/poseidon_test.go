@@ -1,22 +1,13 @@
 package poseidon
 
 import (
-	"encoding/hex"
 	"math/big"
 	"testing"
 
 	"github.com/iden3/go-iden3-crypto/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/crypto/blake2b"
 )
-
-func TestBlake2bVersion(t *testing.T) {
-	h := blake2b.Sum256([]byte("poseidon_constants"))
-	assert.Equal(t,
-		"e57ba154fb2c47811dc1a2369b27e25a44915b4e4ece4eb8ec74850cb78e01b1",
-		hex.EncodeToString(h[:]))
-}
 
 func TestPoseidonHash(t *testing.T) {
 	b0 := big.NewInt(0)
@@ -119,6 +110,20 @@ func TestErrorInputs(t *testing.T) {
 	_, err = Hash([]*big.Int{b1, b2, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0})
 	require.NotNil(t, err)
 	assert.Equal(t, "invalid inputs length 18, max 16", err.Error())
+}
+
+func TestInputsNotInField(t *testing.T) {
+	var err error
+
+	// Very big number, should just return error and not go into endless loop
+	b1 := utils.NewIntFromString("12242166908188651009877250812424843524687801523336557272219921456462821518061999999999999999999999999999999999999999999999999999999999") //nolint:lll
+	_, err = Hash([]*big.Int{b1})
+	require.Error(t, err, "inputs values not inside Finite Field")
+
+	// Finite Field const Q, should return error
+	b2 := utils.NewIntFromString("21888242871839275222246405745257275088548364400416034343698204186575808495617") //nolint:lll
+	_, err = Hash([]*big.Int{b2})
+	require.Error(t, err, "inputs values not inside Finite Field")
 }
 
 func BenchmarkPoseidonHash(b *testing.B) {
