@@ -20,7 +20,7 @@ func zero() *ff.Element {
 // exp5 performs x^5 mod p
 // https://eprint.iacr.org/2019/458.pdf page 8
 func exp5(a *ff.Element) {
-	a.Exp(*a, 5) //nolint:gomnd
+	a.Exp(*a, big.NewInt(5)) //nolint:gomnd
 }
 
 // exp5state perform exp5 for whole state
