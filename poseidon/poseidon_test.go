@@ -126,7 +126,7 @@ func TestInputsNotInField(t *testing.T) {
 	require.Error(t, err, "inputs values not inside Finite Field")
 }
 
-func BenchmarkPoseidonHashArity6(b *testing.B) {
+func BenchmarkPoseidonHash6Inputs(b *testing.B) {
 	b0 := big.NewInt(0)
 	b1 := utils.NewIntFromString("12242166908188651009877250812424843524687801523336557272219921456462821518061") //nolint:lll
 	b2 := utils.NewIntFromString("12242166908188651009877250812424843524687801523336557272219921456462821518061") //nolint:lll
@@ -138,7 +138,7 @@ func BenchmarkPoseidonHashArity6(b *testing.B) {
 	}
 }
 
-func BenchmarkPoseidonHashArity16(b *testing.B) {
+func BenchmarkPoseidonHash16Inputs(b *testing.B) {
 	bigArray16 := []*big.Int{
 		big.NewInt(1),
 		big.NewInt(2),
