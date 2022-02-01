@@ -131,10 +131,27 @@ func BenchmarkPoseidonHash6Inputs(b *testing.B) {
 	b1 := utils.NewIntFromString("12242166908188651009877250812424843524687801523336557272219921456462821518061") //nolint:lll
 	b2 := utils.NewIntFromString("12242166908188651009877250812424843524687801523336557272219921456462821518061") //nolint:lll
 
-	bigArray4 := []*big.Int{b1, b2, b0, b0, b0, b0}
+	bigArray6 := []*big.Int{b1, b2, b0, b0, b0, b0}
 
 	for i := 0; i < b.N; i++ {
-		Hash(bigArray4) //nolint:errcheck,gosec
+		Hash(bigArray6) //nolint:errcheck,gosec
+	}
+}
+
+func BenchmarkPoseidonHash8Inputs(b *testing.B) {
+	bigArray8 := []*big.Int{
+		big.NewInt(1),
+		big.NewInt(2),
+		big.NewInt(3),
+		big.NewInt(4),
+		big.NewInt(5),
+		big.NewInt(6),
+		big.NewInt(7),
+		big.NewInt(8),
+	}
+
+	for i := 0; i < b.N; i++ {
+		Hash(bigArray8) //nolint:errcheck,gosec
 	}
 }
 
