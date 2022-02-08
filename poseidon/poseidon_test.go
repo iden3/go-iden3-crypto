@@ -133,6 +133,7 @@ func TestHashBytes(t *testing.T) {
 		bytes        string
 		expectedHash string
 	}
+	//nolint:lll
 	var testVectors = []testVector{
 		{
 			bytes:        "dead",
