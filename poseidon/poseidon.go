@@ -14,6 +14,7 @@ const NROUNDSF = 8 //nolint:golint
 var NROUNDSP = []int{56, 57, 56, 60, 60, 63, 64, 63, 60, 66, 60, 65, 70, 60, 64, 68} //nolint:golint
 
 const spongeChunkSize = 31
+const spongeInputs = 16
 
 func zero() *ff.Element {
 	return ff.NewElement()
@@ -124,8 +125,8 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 // HashBytes returns a sponge hash of a msg byte slice split into blocks of 31 bytes
 func HashBytes(msg []byte) (*big.Int, error) {
 	// not used inputs default to zero
-	inputs := make([]*big.Int, 16)
-	for j := 0; j < 16; j++ {
+	inputs := make([]*big.Int, spongeInputs)
+	for j := 0; j < spongeInputs; j++ {
 		inputs[j] = new(big.Int)
 	}
 	dirty := false
@@ -136,15 +137,15 @@ func HashBytes(msg []byte) (*big.Int, error) {
 	for i := 0; i < len(msg)/spongeChunkSize; i++ {
 		dirty = true
 		inputs[k].SetBytes(msg[spongeChunkSize*i : spongeChunkSize*(i+1)])
-		if k == 15 {
+		if k == spongeInputs-1 {
 			hash, err = Hash(inputs)
 			dirty = false
 			if err != nil {
 				return nil, err
 			}
-			inputs = make([]*big.Int, 16)
+			inputs = make([]*big.Int, spongeInputs)
 			inputs[0] = hash
-			for j := 1; j < 16; j++ {
+			for j := 1; j < spongeInputs; j++ {
 				inputs[j] = new(big.Int)
 			}
 			k = 1
@@ -155,8 +156,9 @@ func HashBytes(msg []byte) (*big.Int, error) {
 
 	if len(msg)%spongeChunkSize != 0 {
 		// the last chunk of the message is less than 31 bytes
-		// zero padding it, so that 0xdeadbeaf becomes 0xdeadbeaf000000000000000000000000000000000000000000000000000000
-		var buf [31]byte
+		// zero padding it, so that 0xdeadbeaf becomes
+		// 0xdeadbeaf000000000000000000000000000000000000000000000000000000
+		var buf [spongeChunkSize]byte
 		copy(buf[:], msg[(len(msg)/spongeChunkSize)*spongeChunkSize:])
 		inputs[k] = new(big.Int).SetBytes(buf[:])
 		dirty = true
