@@ -559,6 +559,12 @@ func (z Element) ToBigIntRegular(res *big.Int) *big.Int {
 	return z.ToBigInt(res)
 }
 
+// ToUint64Regular returns z as a uint64 in regular form
+func (z Element) ToUint64Regular() uint64 {
+	z.FromMont()
+	return z[0]
+}
+
 // Bytes returns the regular (non montgomery) value
 // of z as a big-endian byte array.
 func (z *Element) Bytes() (res [Limbs * 8]byte) {

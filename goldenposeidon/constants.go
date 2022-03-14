@@ -13,7 +13,7 @@ var (
 	mcirc = []uint64{17, 15, 41, 16, 2, 28, 13, 13, 39, 18, 34, 20}
 	mdiag = []uint64{8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
-	c = [360]uint64{
+	c = []uint64{
 		0xb585f766f2144405, 0x7746a55f43921ad7, 0xb2fb0d31cee799b4, 0x0f6760a4803427d7,
 		0xe10d666650f4e012, 0x8cae14cb07d09bf1, 0xd438539c95f63e9f, 0xef781c7ce35b4c3d,
 		0xcdc4a239b0c44426, 0x277fa208bf337bff, 0xe17653a29da578a1, 0xc54302f225db2c76,
@@ -115,18 +115,12 @@ func init() {
 		C = append(C, ffg.NewElementFromUint64(c[i]))
 	}
 
-	var mFFCirc, mFFDiag []*ffg.Element
-	for i := 0; i < mLen; i++ {
-		mFFCirc = append(mFFCirc, ffg.NewElementFromUint64(mcirc[i]))
-		mFFDiag = append(mFFDiag, ffg.NewElementFromUint64(mdiag[i]))
-	}
-
 	for i := 0; i < mLen; i++ {
 		var row []*ffg.Element
 		for j := 0; j < mLen; j++ {
-			ele := mFFCirc[(-i+j+mLen)%mLen]
+			ele := ffg.NewElementFromUint64(mcirc[(-i+j+mLen)%mLen])
 			if i == j {
-				ele = ele.Add(ele, mFFDiag[i])
+				ele = ffg.NewElementFromUint64(mcirc[0] + mdiag[i])
 			}
 			row = append(row, ele)
 		}
