@@ -68,5 +68,10 @@ func Hash(inpBI [NROUNDSF]uint64, capBI [CAPLEN]uint64) ([CAPLEN]uint64, error) 
 		state = mix(state)
 	}
 
-	return [CAPLEN]uint64{state[0].ToUint64Regular(), state[1].ToUint64Regular(), state[2].ToUint64Regular(), state[3].ToUint64Regular()}, nil
+	return [CAPLEN]uint64{
+		state[0].ToUint64Regular(),
+		state[1].ToUint64Regular(),
+		state[2].ToUint64Regular(),
+		state[3].ToUint64Regular(),
+	}, nil
 }

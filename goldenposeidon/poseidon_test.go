@@ -47,7 +47,10 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash([NROUNDSF]uint64{bm1, bm1, bm1, bm1, bm1, bm1, bm1, bm1}, [CAPLEN]uint64{bm1, bm1, bm1, bm1})
+	h, err = Hash(
+		[NROUNDSF]uint64{bm1, bm1, bm1, bm1, bm1, bm1, bm1, bm1},
+		[CAPLEN]uint64{bm1, bm1, bm1, bm1},
+	)
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
