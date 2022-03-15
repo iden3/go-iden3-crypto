@@ -6,9 +6,6 @@ import (
 	"github.com/iden3/go-iden3-crypto/ffg"
 )
 
-const spongeChunkSize = 31
-const spongeInputs = 16
-
 func zero() *ffg.Element {
 	return ffg.NewElement()
 }
