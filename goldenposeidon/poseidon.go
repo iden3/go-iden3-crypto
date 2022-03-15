@@ -1,7 +1,6 @@
 package poseidon
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/iden3/go-iden3-crypto/ffg"
@@ -51,20 +50,13 @@ func mix(state []*ffg.Element) []*ffg.Element {
 }
 
 // Hash computes the Poseidon hash for the given inputs
-func Hash(inpBI []*big.Int, capBI []*big.Int) ([CAPLEN]uint64, error) {
-	if len(inpBI) != NROUNDSF {
-		return [CAPLEN]uint64{}, fmt.Errorf("invalid inputs length %d, must be 8", len(inpBI))
-	}
-	if len(capBI) != CAPLEN {
-		return [CAPLEN]uint64{}, fmt.Errorf("invalid capcity length %d, must be 4", len(capBI))
-	}
-
+func Hash(inpBI [NROUNDSF]uint64, capBI [CAPLEN]uint64) ([CAPLEN]uint64, error) {
 	state := make([]*ffg.Element, mLen)
 	for i := 0; i < NROUNDSF; i++ {
-		state[i] = ffg.NewElement().SetBigInt(inpBI[i])
+		state[i] = ffg.NewElement().SetUint64(inpBI[i])
 	}
 	for i := 0; i < CAPLEN; i++ {
-		state[i+NROUNDSF] = ffg.NewElement().SetBigInt(capBI[i])
+		state[i+NROUNDSF] = ffg.NewElement().SetUint64(capBI[i])
 	}
 
 	for r := 0; r < NROUNDSF+NROUNDSP; r++ {

@@ -1,19 +1,20 @@
 package poseidon
 
 import (
-	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPoseidonHash(t *testing.T) {
-	b0 := big.NewInt(0)
-	b1 := big.NewInt(1)
-	b_1 := big.NewInt(-1)
-	bM := new(big.Int).SetUint64(18446744069414584321)
+const prime uint64 = 18446744069414584321
 
-	h, err := Hash([]*big.Int{b0, b0, b0, b0, b0, b0, b0, b0}, []*big.Int{b0, b0, b0, b0})
+func TestPoseidonHash(t *testing.T) {
+	b0 := uint64(0)
+	b1 := uint64(1)
+	bm1 := prime - 1
+	bM := prime
+
+	h, err := Hash([NROUNDSF]uint64{b0, b0, b0, b0, b0, b0, b0, b0}, [CAPLEN]uint64{b0, b0, b0, b0})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -24,7 +25,7 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash([]*big.Int{b1, b1, b1, b1, b1, b1, b1, b1}, []*big.Int{b1, b1, b1, b1})
+	h, err = Hash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1}, [CAPLEN]uint64{b1, b1, b1, b1})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -35,7 +36,7 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash([]*big.Int{b1, b1, b1, b1, b1, b1, b1, b1}, []*big.Int{b1, b1, b1, b1})
+	h, err = Hash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1}, [CAPLEN]uint64{b1, b1, b1, b1})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -46,7 +47,7 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash([]*big.Int{b_1, b_1, b_1, b_1, b_1, b_1, b_1, b_1}, []*big.Int{b_1, b_1, b_1, b_1})
+	h, err = Hash([NROUNDSF]uint64{bm1, bm1, bm1, bm1, bm1, bm1, bm1, bm1}, [CAPLEN]uint64{bm1, bm1, bm1, bm1})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -57,7 +58,7 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash([]*big.Int{bM, bM, bM, bM, bM, bM, bM, bM}, []*big.Int{b0, b0, b0, b0})
+	h, err = Hash([NROUNDSF]uint64{bM, bM, bM, bM, bM, bM, bM, bM}, [CAPLEN]uint64{b0, b0, b0, b0})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -68,16 +69,16 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash([]*big.Int{
-		new(big.Int).SetUint64(923978),
-		new(big.Int).SetUint64(235763497586),
-		new(big.Int).SetUint64(9827635653498),
-		new(big.Int).SetUint64(112870),
-		new(big.Int).SetUint64(289273673480943876),
-		new(big.Int).SetUint64(230295874986745876),
-		new(big.Int).SetUint64(6254867324987),
-		new(big.Int).SetUint64(2087),
-	}, []*big.Int{b0, b0, b0, b0})
+	h, err = Hash([NROUNDSF]uint64{
+		uint64(923978),
+		uint64(235763497586),
+		uint64(9827635653498),
+		uint64(112870),
+		uint64(289273673480943876),
+		uint64(230295874986745876),
+		uint64(6254867324987),
+		uint64(2087),
+	}, [CAPLEN]uint64{b0, b0, b0, b0})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{

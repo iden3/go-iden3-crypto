@@ -106,7 +106,9 @@ var (
 		0x4543d9df5476d3cb, 0xf172d73e004fc90d, 0xdfd1c4febcc81238, 0xbc8dfb627fe558fc,
 	}
 
+	// C is a constant array of element
 	C []*ffg.Element
+	// M is a matrix
 	M [][]*ffg.Element
 )
 
