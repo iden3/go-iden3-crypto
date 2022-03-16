@@ -14,7 +14,6 @@
 
 #include "textflag.h"
 #include "funcdata.h"
-	
 // modulus q
 DATA q<>+0(SB)/8, $0x43e1f593f0000001
 DATA q<>+8(SB)/8, $0x2833e84879b97091
