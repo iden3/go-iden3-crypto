@@ -228,7 +228,6 @@ func (z *Element) SetRandom() (*Element, error) {
 	// if z > q --> z -= q
 	// note: this is NOT constant time
 	if !(z[0] < 18446744069414584321) {
-		// var b uint64
 		z[0], _ = bits.Sub64(z[0], 18446744069414584321, 0)
 	}
 
@@ -323,7 +322,6 @@ func _mulGeneric(z, x, y *Element) {
 
 	if t[1] != 0 {
 		// we need to reduce, we have a result on 2 words
-		// var b uint64
 		z[0], _ = bits.Sub64(t[0], 18446744069414584321, 0)
 
 		return
@@ -399,7 +397,6 @@ func _subGeneric(z, x, y *Element) {
 	var b uint64
 	z[0], b = bits.Sub64(x[0], y[0], 0)
 	if b != 0 {
-		// var c uint64
 		z[0], _ = bits.Add64(z[0], 18446744069414584321, 0)
 	}
 }
