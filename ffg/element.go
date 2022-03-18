@@ -178,7 +178,6 @@ func (z *Element) IsZero() bool {
 
 // IsUint64 returns true if z[0] >= 0 and all other words are 0
 func (z *Element) IsUint64() bool {
-	// return () == 0
 	return true
 }
 
@@ -337,7 +336,6 @@ func _mulGeneric(z, x, y *Element) {
 	// if z > q --> z -= q
 	// note: this is NOT constant time
 	if !(z[0] < 18446744069414584321) {
-		// var b uint64
 		z[0], _ = bits.Sub64(z[0], 18446744069414584321, 0)
 	}
 }
@@ -355,7 +353,6 @@ func _fromMontGeneric(z *Element) {
 	// if z > q --> z -= q
 	// note: this is NOT constant time
 	if !(z[0] < 18446744069414584321) {
-		// var b uint64
 		z[0], _ = bits.Sub64(z[0], 18446744069414584321, 0)
 	}
 }
@@ -375,7 +372,6 @@ func _addGeneric(z, x, y *Element) {
 	// if z > q --> z -= q
 	// note: this is NOT constant time
 	if !(z[0] < 18446744069414584321) {
-		// var b uint64
 		z[0], _ = bits.Sub64(z[0], 18446744069414584321, 0)
 	}
 }
@@ -395,7 +391,6 @@ func _doubleGeneric(z, x *Element) {
 	// if z > q --> z -= q
 	// note: this is NOT constant time
 	if !(z[0] < 18446744069414584321) {
-		// var b uint64
 		z[0], _ = bits.Sub64(z[0], 18446744069414584321, 0)
 	}
 }
@@ -414,7 +409,6 @@ func _negGeneric(z, x *Element) {
 		z.SetZero()
 		return
 	}
-	// var borrow uint64
 	z[0], _ = bits.Sub64(18446744069414584321, x[0], 0)
 }
 
@@ -423,7 +417,6 @@ func _reduceGeneric(z *Element) {
 	// if z > q --> z -= q
 	// note: this is NOT constant time
 	if !(z[0] < 18446744069414584321) {
-		// var b uint64
 		z[0], _ = bits.Sub64(z[0], 18446744069414584321, 0)
 	}
 }
