@@ -213,6 +213,27 @@ func BenchmarkPoseidonHash8Inputs(b *testing.B) {
 	}
 }
 
+func BenchmarkPoseidonHash12Inputs(b *testing.B) {
+	bigArray12 := []*big.Int{
+		big.NewInt(1),
+		big.NewInt(2),
+		big.NewInt(3),
+		big.NewInt(4),
+		big.NewInt(5),
+		big.NewInt(6),
+		big.NewInt(7),
+		big.NewInt(8),
+		big.NewInt(9),
+		big.NewInt(10),
+		big.NewInt(11),
+		big.NewInt(12),
+	}
+
+	for i := 0; i < b.N; i++ {
+		Hash(bigArray12) //nolint:errcheck,gosec
+	}
+}
+
 func BenchmarkPoseidonHash16Inputs(b *testing.B) {
 	bigArray16 := []*big.Int{
 		big.NewInt(1),

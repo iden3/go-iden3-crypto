@@ -1,6 +1,7 @@
 package poseidon
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,13 +9,24 @@ import (
 
 const prime uint64 = 18446744069414584321
 
-func TestPoseidonHash(t *testing.T) {
+func compareHash(inpBI [NROUNDSF]uint64, capBI [CAPLEN]uint64) ([CAPLEN]uint64, error) {
+	h, err := Hash(inpBI, capBI)
+	h1, _ := NeptuneHash(inpBI, capBI)
+
+	if h != h1 {
+		return h, fmt.Errorf("Not same")
+	}
+
+	return h, err
+}
+
+func TestPoseidonHashCompare(t *testing.T) {
 	b0 := uint64(0)
 	b1 := uint64(1)
 	bm1 := prime - 1
 	bM := prime
 
-	h, err := Hash([NROUNDSF]uint64{b0, b0, b0, b0, b0, b0, b0, b0}, [CAPLEN]uint64{b0, b0, b0, b0})
+	h, err := compareHash([NROUNDSF]uint64{b0, b0, b0, b0, b0, b0, b0, b0}, [CAPLEN]uint64{b0, b0, b0, b0})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -25,7 +37,7 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1}, [CAPLEN]uint64{b1, b1, b1, b1})
+	h, err = compareHash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1}, [CAPLEN]uint64{b1, b1, b1, b1})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -36,7 +48,7 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1}, [CAPLEN]uint64{b1, b1, b1, b1})
+	h, err = compareHash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1}, [CAPLEN]uint64{b1, b1, b1, b1})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -47,7 +59,7 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash(
+	h, err = compareHash(
 		[NROUNDSF]uint64{bm1, bm1, bm1, bm1, bm1, bm1, bm1, bm1},
 		[CAPLEN]uint64{bm1, bm1, bm1, bm1},
 	)
@@ -61,7 +73,7 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash([NROUNDSF]uint64{bM, bM, bM, bM, bM, bM, bM, bM}, [CAPLEN]uint64{b0, b0, b0, b0})
+	h, err = compareHash([NROUNDSF]uint64{bM, bM, bM, bM, bM, bM, bM, bM}, [CAPLEN]uint64{b0, b0, b0, b0})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -72,7 +84,7 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash([NROUNDSF]uint64{
+	h, err = compareHash([NROUNDSF]uint64{
 		uint64(923978),
 		uint64(235763497586),
 		uint64(9827635653498),
@@ -91,4 +103,22 @@ func TestPoseidonHash(t *testing.T) {
 			8161503938059336191,
 		}, h,
 	)
+}
+
+func BenchmarkPoseidonHash(b *testing.B) {
+	inp := [NROUNDSF]uint64{1, 2, 3, 4, 5, 6, 7, 8}
+	cap := [CAPLEN]uint64{10, 11, 12, 13}
+
+	for i := 0; i < b.N; i++ {
+		Hash(inp, cap) //nolint:errcheck,gosec
+	}
+}
+
+func BenchmarkPoseidonNeptuneHash(b *testing.B) {
+	inp := [NROUNDSF]uint64{1, 2, 3, 4, 5, 6, 7, 8}
+	cap := [CAPLEN]uint64{10, 11, 12, 13}
+
+	for i := 0; i < b.N; i++ {
+		Hash(inp, cap) //nolint:errcheck,gosec
+	}
 }
