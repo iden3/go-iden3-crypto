@@ -32,7 +32,7 @@ func ark(state []*ffg.Element, it int) {
 // arkOpt computes Add-Round Key, from the paper https://eprint.iacr.org/2019/458.pdf
 func arkOpt(state []*ffg.Element, it int) {
 	for i := 0; i < len(state); i++ {
-		state[i].Add(state[i], C_OPT[it+i])
+		state[i].Add(state[i], COpt[it+i])
 	}
 }
 
@@ -98,7 +98,7 @@ func NeptuneHash(inpBI [NROUNDSF]uint64, capBI [CAPLEN]uint64) ([CAPLEN]uint64, 
 	}
 
 	for i := 0; i < mLen; i++ {
-		state[i].Add(state[i], C_OPT[i])
+		state[i].Add(state[i], COpt[i])
 	}
 
 	for r := 0; r < NROUNDSF/2; r++ {
@@ -109,7 +109,7 @@ func NeptuneHash(inpBI [NROUNDSF]uint64, capBI [CAPLEN]uint64) ([CAPLEN]uint64, 
 
 	for r := 0; r < NROUNDSP; r++ {
 		exp7(state[0])
-		state[0].Add(state[0], C_OPT[(NROUNDSF/2+1)*mLen+r])
+		state[0].Add(state[0], COpt[(NROUNDSF/2+1)*mLen+r])
 
 		s0 := zero()
 		mul := zero()

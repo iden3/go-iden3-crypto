@@ -26,7 +26,8 @@ func TestPoseidonHashCompare(t *testing.T) {
 	bm1 := prime - 1
 	bM := prime
 
-	h, err := compareHash([NROUNDSF]uint64{b0, b0, b0, b0, b0, b0, b0, b0}, [CAPLEN]uint64{b0, b0, b0, b0})
+	h, err := compareHash([NROUNDSF]uint64{b0, b0, b0, b0, b0, b0, b0, b0},
+		[CAPLEN]uint64{b0, b0, b0, b0})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -37,7 +38,8 @@ func TestPoseidonHashCompare(t *testing.T) {
 		}, h,
 	)
 
-	h, err = compareHash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1}, [CAPLEN]uint64{b1, b1, b1, b1})
+	h, err = compareHash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1},
+		[CAPLEN]uint64{b1, b1, b1, b1})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -48,7 +50,8 @@ func TestPoseidonHashCompare(t *testing.T) {
 		}, h,
 	)
 
-	h, err = compareHash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1}, [CAPLEN]uint64{b1, b1, b1, b1})
+	h, err = compareHash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1},
+		[CAPLEN]uint64{b1, b1, b1, b1})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -73,7 +76,8 @@ func TestPoseidonHashCompare(t *testing.T) {
 		}, h,
 	)
 
-	h, err = compareHash([NROUNDSF]uint64{bM, bM, bM, bM, bM, bM, bM, bM}, [CAPLEN]uint64{b0, b0, b0, b0})
+	h, err = compareHash([NROUNDSF]uint64{bM, bM, bM, bM, bM, bM, bM, bM},
+		[CAPLEN]uint64{b0, b0, b0, b0})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -114,11 +118,11 @@ func BenchmarkPoseidonHash(b *testing.B) {
 	}
 }
 
-func BenchmarkPoseidonNeptuneHash(b *testing.B) {
+func BenchmarkNeptuneHash(b *testing.B) {
 	inp := [NROUNDSF]uint64{1, 2, 3, 4, 5, 6, 7, 8}
 	cap := [CAPLEN]uint64{10, 11, 12, 13}
 
 	for i := 0; i < b.N; i++ {
-		Hash(inp, cap) //nolint:errcheck,gosec
+		NeptuneHash(inp, cap) //nolint:errcheck,gosec
 	}
 }

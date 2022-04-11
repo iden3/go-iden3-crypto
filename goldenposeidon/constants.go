@@ -106,7 +106,7 @@ var (
 		0x4543d9df5476d3cb, 0xf172d73e004fc90d, 0xdfd1c4febcc81238, 0xbc8dfb627fe558fc,
 	}
 
-	c_opt = []uint64{
+	cOpt = []uint64{
 		0xb585f766f2144405,
 		0x7746a55f43921ad7,
 		0xb2fb0d31cee799b4,
@@ -909,8 +909,8 @@ var (
 
 	// C is a constant array of element
 	C []*ffg.Element
-	// C_OPT is a constant array of element
-	C_OPT []*ffg.Element
+	// COpt is a constant array of element
+	COpt []*ffg.Element
 	// M is a matrix
 	M [][]*ffg.Element
 	// P is a matrix
@@ -924,8 +924,8 @@ func init() {
 		C = append(C, ffg.NewElementFromUint64(c[i]))
 	}
 
-	for i := 0; i < len(c_opt); i++ {
-		C_OPT = append(C_OPT, ffg.NewElementFromUint64(c_opt[i]))
+	for i := 0; i < len(cOpt); i++ {
+		COpt = append(COpt, ffg.NewElementFromUint64(cOpt[i]))
 	}
 
 	for i := 0; i < len(s); i++ {
