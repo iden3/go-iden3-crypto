@@ -2,8 +2,10 @@ package poseidon
 
 import (
 	"fmt"
+	"math/big"
 	"testing"
 
+	"github.com/iden3/go-iden3-crypto/poseidon"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -124,5 +126,26 @@ func BenchmarkNeptuneHash(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		NeptuneHash(inp, cap) //nolint:errcheck,gosec
+	}
+}
+
+func BenchmarkPoseidonHash12Inputs(b *testing.B) {
+	bigArray12 := []*big.Int{
+		big.NewInt(1),
+		big.NewInt(2),
+		big.NewInt(3),
+		big.NewInt(4),
+		big.NewInt(5),
+		big.NewInt(6),
+		big.NewInt(7),
+		big.NewInt(8),
+		big.NewInt(9),
+		big.NewInt(10),
+		big.NewInt(11),
+		big.NewInt(12),
+	}
+
+	for i := 0; i < b.N; i++ {
+		poseidon.Hash(bigArray12) //nolint:errcheck,gosec
 	}
 }
