@@ -30,7 +30,7 @@ func ark(state []*ffg.Element, it int) {
 }
 
 // mix returns [[matrix]] * [vector]
-func mix(state []*ffg.Element) []*ffg.Element {
+func mix(state []*ffg.Element, opt bool) []*ffg.Element {
 	mul := zero()
 	newState := make([]*ffg.Element, mLen)
 	for i := 0; i < mLen; i++ {
@@ -39,14 +39,18 @@ func mix(state []*ffg.Element) []*ffg.Element {
 	for i := 0; i < mLen; i++ {
 		newState[i].SetUint64(0)
 		for j := 0; j < mLen; j++ {
-			mul.Mul(M[i][j], state[j])
+			if opt {
+				mul.Mul(P[j][i], state[j])
+			} else {
+				mul.Mul(M[j][i], state[j])
+			}
 			newState[i].Add(newState[i], mul)
 		}
 	}
 	return newState
 }
 
-// Hash computes the Poseidon hash for the given inputs
+// Hash computes the hash for the given inputs
 func Hash(inpBI [NROUNDSF]uint64, capBI [CAPLEN]uint64) ([CAPLEN]uint64, error) {
 	state := make([]*ffg.Element, mLen)
 	for i := 0; i < NROUNDSF; i++ {
@@ -56,16 +60,40 @@ func Hash(inpBI [NROUNDSF]uint64, capBI [CAPLEN]uint64) ([CAPLEN]uint64, error) 
 		state[i+NROUNDSF] = ffg.NewElement().SetUint64(capBI[i])
 	}
 
-	for r := 0; r < NROUNDSF+NROUNDSP; r++ {
-		ark(state, r*mLen)
+	for i := 0; i < mLen; i++ {
+		state[i].Add(state[i], C[i])
+	}
 
-		if r < NROUNDSF/2 || r >= NROUNDSF/2+NROUNDSP {
-			exp7state(state)
-		} else {
-			exp7(state[0])
+	for r := 0; r < NROUNDSF/2; r++ {
+		exp7state(state)
+		ark(state, (r+1)*mLen)
+		state = mix(state, r == NROUNDSF/2-1)
+	}
+
+	for r := 0; r < NROUNDSP; r++ {
+		exp7(state[0])
+		state[0].Add(state[0], C[(NROUNDSF/2+1)*mLen+r])
+
+		s0 := zero()
+		mul := zero()
+		mul.Mul(S[(mLen*2-1)*r], state[0])
+		s0.Add(s0, mul)
+		for i := 1; i < mLen; i++ {
+			mul.Mul(S[(mLen*2-1)*r+i], state[i])
+			s0.Add(s0, mul)
+			mul.Mul(S[(mLen*2-1)*r+mLen+i-1], state[0])
+			state[i].Add(state[i], mul)
+		}
+		state[0] = s0
+	}
+
+	for r := 0; r < NROUNDSF/2; r++ {
+		exp7state(state)
+		if r < NROUNDSF/2-1 {
+			ark(state, (NROUNDSF/2+1+r)*mLen+NROUNDSP)
 		}
 
-		state = mix(state)
+		state = mix(state, false)
 	}
 
 	return [CAPLEN]uint64{

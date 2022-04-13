@@ -1,20 +1,23 @@
 package poseidon
 
 import (
+	"math/big"
 	"testing"
 
+	"github.com/iden3/go-iden3-crypto/poseidon"
 	"github.com/stretchr/testify/assert"
 )
 
 const prime uint64 = 18446744069414584321
 
-func TestPoseidonHash(t *testing.T) {
+func TestPoseidonHashCompare(t *testing.T) {
 	b0 := uint64(0)
 	b1 := uint64(1)
 	bm1 := prime - 1
 	bM := prime
 
-	h, err := Hash([NROUNDSF]uint64{b0, b0, b0, b0, b0, b0, b0, b0}, [CAPLEN]uint64{b0, b0, b0, b0})
+	h, err := Hash([NROUNDSF]uint64{b0, b0, b0, b0, b0, b0, b0, b0},
+		[CAPLEN]uint64{b0, b0, b0, b0})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -25,7 +28,8 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1}, [CAPLEN]uint64{b1, b1, b1, b1})
+	h, err = Hash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1},
+		[CAPLEN]uint64{b1, b1, b1, b1})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -36,7 +40,8 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1}, [CAPLEN]uint64{b1, b1, b1, b1})
+	h, err = Hash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1},
+		[CAPLEN]uint64{b1, b1, b1, b1})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -61,7 +66,8 @@ func TestPoseidonHash(t *testing.T) {
 		}, h,
 	)
 
-	h, err = Hash([NROUNDSF]uint64{bM, bM, bM, bM, bM, bM, bM, bM}, [CAPLEN]uint64{b0, b0, b0, b0})
+	h, err = Hash([NROUNDSF]uint64{bM, bM, bM, bM, bM, bM, bM, bM},
+		[CAPLEN]uint64{b0, b0, b0, b0})
 	assert.Nil(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
@@ -91,4 +97,34 @@ func TestPoseidonHash(t *testing.T) {
 			8161503938059336191,
 		}, h,
 	)
+}
+
+func BenchmarkPoseidonHash12Inputs(b *testing.B) {
+	bigArray12 := []*big.Int{
+		big.NewInt(1),
+		big.NewInt(2),
+		big.NewInt(3),
+		big.NewInt(4),
+		big.NewInt(5),
+		big.NewInt(6),
+		big.NewInt(7),
+		big.NewInt(8),
+		big.NewInt(9),
+		big.NewInt(10),
+		big.NewInt(11),
+		big.NewInt(12),
+	}
+
+	for i := 0; i < b.N; i++ {
+		poseidon.Hash(bigArray12) //nolint:errcheck,gosec
+	}
+}
+
+func BenchmarkNeptuneHash(b *testing.B) {
+	inp := [NROUNDSF]uint64{1, 2, 3, 4, 5, 6, 7, 8}
+	cap := [CAPLEN]uint64{10, 11, 12, 13}
+
+	for i := 0; i < b.N; i++ {
+		Hash(inp, cap) //nolint:errcheck,gosec
+	}
 }
