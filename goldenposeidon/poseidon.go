@@ -29,13 +29,6 @@ func ark(state []*ffg.Element, it int) {
 	}
 }
 
-// arkOpt computes Add-Round Key, from the paper https://eprint.iacr.org/2019/458.pdf
-func arkOpt(state []*ffg.Element, it int) {
-	for i := 0; i < len(state); i++ {
-		state[i].Add(state[i], COpt[it+i])
-	}
-}
-
 // mix returns [[matrix]] * [vector]
 func mix(state []*ffg.Element, opt bool) []*ffg.Element {
 	mul := zero()
@@ -57,7 +50,7 @@ func mix(state []*ffg.Element, opt bool) []*ffg.Element {
 	return newState
 }
 
-// Hash computes the Poseidon hash for the given inputs
+// Hash computes the hash for the given inputs
 func Hash(inpBI [NROUNDSF]uint64, capBI [CAPLEN]uint64) ([CAPLEN]uint64, error) {
 	state := make([]*ffg.Element, mLen)
 	for i := 0; i < NROUNDSF; i++ {
@@ -67,49 +60,19 @@ func Hash(inpBI [NROUNDSF]uint64, capBI [CAPLEN]uint64) ([CAPLEN]uint64, error) 
 		state[i+NROUNDSF] = ffg.NewElement().SetUint64(capBI[i])
 	}
 
-	for r := 0; r < NROUNDSF+NROUNDSP; r++ {
-		ark(state, r*mLen)
-
-		if r < NROUNDSF/2 || r >= NROUNDSF/2+NROUNDSP {
-			exp7state(state)
-		} else {
-			exp7(state[0])
-		}
-
-		state = mix(state, false)
-	}
-
-	return [CAPLEN]uint64{
-		state[0].ToUint64Regular(),
-		state[1].ToUint64Regular(),
-		state[2].ToUint64Regular(),
-		state[3].ToUint64Regular(),
-	}, nil
-}
-
-// NeptuneHash computes the hash for the given inputs
-func NeptuneHash(inpBI [NROUNDSF]uint64, capBI [CAPLEN]uint64) ([CAPLEN]uint64, error) {
-	state := make([]*ffg.Element, mLen)
-	for i := 0; i < NROUNDSF; i++ {
-		state[i] = ffg.NewElement().SetUint64(inpBI[i])
-	}
-	for i := 0; i < CAPLEN; i++ {
-		state[i+NROUNDSF] = ffg.NewElement().SetUint64(capBI[i])
-	}
-
 	for i := 0; i < mLen; i++ {
-		state[i].Add(state[i], COpt[i])
+		state[i].Add(state[i], C[i])
 	}
 
 	for r := 0; r < NROUNDSF/2; r++ {
 		exp7state(state)
-		arkOpt(state, (r+1)*mLen)
+		ark(state, (r+1)*mLen)
 		state = mix(state, r == NROUNDSF/2-1)
 	}
 
 	for r := 0; r < NROUNDSP; r++ {
 		exp7(state[0])
-		state[0].Add(state[0], COpt[(NROUNDSF/2+1)*mLen+r])
+		state[0].Add(state[0], C[(NROUNDSF/2+1)*mLen+r])
 
 		s0 := zero()
 		mul := zero()
@@ -127,7 +90,7 @@ func NeptuneHash(inpBI [NROUNDSF]uint64, capBI [CAPLEN]uint64) ([CAPLEN]uint64, 
 	for r := 0; r < NROUNDSF/2; r++ {
 		exp7state(state)
 		if r < NROUNDSF/2-1 {
-			arkOpt(state, (NROUNDSF/2+1+r)*mLen+NROUNDSP)
+			ark(state, (NROUNDSF/2+1+r)*mLen+NROUNDSP)
 		}
 
 		state = mix(state, false)
