@@ -124,9 +124,18 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 
 // HashBytes returns a sponge hash of a msg byte slice split into blocks of 31 bytes
 func HashBytes(msg []byte) (*big.Int, error) {
+	return HashBytesX(msg, spongeInputs)
+}
+
+// HashBytesX returns a sponge hash of a msg byte slice split into blocks of 31 bytes
+func HashBytesX(msg []byte, frameSize int) (*big.Int, error) {
+	if frameSize < 2 || frameSize > 16 {
+		return nil, errors.New("incorrect frame size")
+	}
+
 	// not used inputs default to zero
-	inputs := make([]*big.Int, spongeInputs)
-	for j := 0; j < spongeInputs; j++ {
+	inputs := make([]*big.Int, frameSize)
+	for j := 0; j < frameSize; j++ {
 		inputs[j] = new(big.Int)
 	}
 	dirty := false
@@ -137,15 +146,15 @@ func HashBytes(msg []byte) (*big.Int, error) {
 	for i := 0; i < len(msg)/spongeChunkSize; i++ {
 		dirty = true
 		inputs[k].SetBytes(msg[spongeChunkSize*i : spongeChunkSize*(i+1)])
-		if k == spongeInputs-1 {
+		if k == frameSize-1 {
 			hash, err = Hash(inputs)
 			dirty = false
 			if err != nil {
 				return nil, err
 			}
-			inputs = make([]*big.Int, spongeInputs)
+			inputs = make([]*big.Int, frameSize)
 			inputs[0] = hash
-			for j := 1; j < spongeInputs; j++ {
+			for j := 1; j < frameSize; j++ {
 				inputs[j] = new(big.Int)
 			}
 			k = 1
@@ -167,6 +176,56 @@ func HashBytes(msg []byte) (*big.Int, error) {
 	if dirty {
 		// we haven't hashed something in the main sponge loop and need to do hash here
 		hash, err = Hash(inputs)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return hash, nil
+}
+
+func SpongeHash(inputs []*big.Int) (*big.Int, error) {
+	return SpongeHashX(inputs, spongeInputs)
+}
+
+func SpongeHashX(inputs []*big.Int, frameSize int) (*big.Int, error) {
+	if frameSize < 2 || frameSize > 16 {
+		return nil, errors.New("incorrect frame size")
+	}
+
+	// not used frame default to zero
+	frame := make([]*big.Int, frameSize)
+	for j := 0; j < frameSize; j++ {
+		frame[j] = new(big.Int)
+	}
+	dirty := false
+	var hash *big.Int
+	var err error
+
+	k := 0
+	for i := 0; i < len(inputs); i++ {
+		dirty = true
+		frame[k] = inputs[i]
+		if k == frameSize-1 {
+			hash, err = Hash(frame)
+			dirty = false
+			if err != nil {
+				return nil, err
+			}
+			frame = make([]*big.Int, frameSize)
+			frame[0] = hash
+			for j := 1; j < frameSize; j++ {
+				frame[j] = new(big.Int)
+			}
+			k = 1
+		} else {
+			k++
+		}
+	}
+
+	if dirty {
+		// we haven't hashed something in the main sponge loop and need to do hash here
+		hash, err = Hash(frame)
 		if err != nil {
 			return nil, err
 		}
