@@ -20,10 +20,14 @@ func zero() *ff.Element {
 	return ff.NewElement()
 }
 
+var (
+	big5 = big.NewInt(5)
+)
+
 // exp5 performs x^5 mod p
 // https://eprint.iacr.org/2019/458.pdf page 8
 func exp5(a *ff.Element) {
-	a.Exp(*a, big.NewInt(5)) //nolint:gomnd
+	a.Exp(*a, big5) //nolint:gomnd
 }
 
 // exp5state perform exp5 for whole state
@@ -90,19 +94,21 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 	ark(state, C, (nRoundsF/2)*t)
 	state = mix(state, t, P)
 
+	mul := zero()
+	newState0 := zero()
 	for i := 0; i < nRoundsP; i++ {
 		exp5(state[0])
 		state[0].Add(state[0], C[(nRoundsF/2+1)*t+i])
 
-		mul := zero()
-		newState0 := zero()
+		mul.SetZero()
+		newState0.SetZero()
 		for j := 0; j < len(state); j++ {
 			mul.Mul(S[(t*2-1)*i+j], state[j])
 			newState0.Add(newState0, mul)
 		}
 
 		for k := 1; k < t; k++ {
-			mul = zero()
+			mul.SetZero()
 			state[k] = state[k].Add(state[k], mul.Mul(state[0], S[(t*2-1)*i+t+k-1]))
 		}
 		state[0] = newState0
