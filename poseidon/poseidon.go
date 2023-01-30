@@ -3,10 +3,9 @@ package poseidon
 import (
 	"errors"
 	"fmt"
-	"math/big"
-
 	"github.com/iden3/go-iden3-crypto/ff"
 	"github.com/iden3/go-iden3-crypto/utils"
+	"math/big"
 )
 
 const NROUNDSF = 8 //nolint:golint
@@ -44,26 +43,31 @@ func ark(state []*ff.Element, c []*ff.Element, it int) {
 	}
 }
 
+var (
+	newState []*ff.Element
+)
+
 // mix returns [[matrix]] * [vector]
-func mix(state []*ff.Element, t int, m [][]*ff.Element) []*ff.Element {
+func mix(state []*ff.Element, m [][]*ff.Element) []*ff.Element {
 	mul := zero()
-	newState := make([]*ff.Element, t)
-	for i := 0; i < t; i++ {
-		newState[i] = zero()
+	t := len(state)
+	for len(newState) < t {
+		newState = append(newState, ff.NewElement())
 	}
-	for i := 0; i < len(state); i++ {
+
+	for i := 0; i < t; i++ {
 		newState[i].SetUint64(0)
-		for j := 0; j < len(state); j++ {
+		for j := 0; j < t; j++ {
 			mul.Mul(m[j][i], state[j])
 			newState[i].Add(newState[i], mul)
 		}
 	}
-	return newState
+	state, newState = newState[:t], state
+	return state
 }
 
 // Hash computes the Poseidon hash for the given inputs
 func Hash(inpBI []*big.Int) (*big.Int, error) {
-	t := len(inpBI) + 1
 	if len(inpBI) == 0 || len(inpBI) > len(NROUNDSP) {
 		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP)) //nolint:gomnd,lll
 	}
@@ -72,6 +76,7 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 	}
 	inp := utils.BigIntArrayToElementArray(inpBI[:])
 
+	t := len(inpBI) + 1
 	nRoundsF := NROUNDSF
 	nRoundsP := NROUNDSP[t-2]
 	C := c.c[t-2]
@@ -88,20 +93,19 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 	for i := 0; i < nRoundsF/2-1; i++ {
 		exp5state(state)
 		ark(state, C, (i+1)*t)
-		state = mix(state, t, M)
+		state = mix(state, M)
 	}
 	exp5state(state)
 	ark(state, C, (nRoundsF/2)*t)
-	state = mix(state, t, P)
+	state = mix(state, P)
 
 	mul := zero()
-	newState0 := zero()
 	for i := 0; i < nRoundsP; i++ {
 		exp5(state[0])
 		state[0].Add(state[0], C[(nRoundsF/2+1)*t+i])
 
 		mul.SetZero()
-		newState0.SetZero()
+		newState0 := zero()
 		for j := 0; j < len(state); j++ {
 			mul.Mul(S[(t*2-1)*i+j], state[j])
 			newState0.Add(newState0, mul)
@@ -117,10 +121,10 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 	for i := 0; i < nRoundsF/2-1; i++ {
 		exp5state(state)
 		ark(state, C, (nRoundsF/2+1)*t+nRoundsP+i*t)
-		state = mix(state, t, M)
+		state = mix(state, M)
 	}
 	exp5state(state)
-	state = mix(state, t, M)
+	state = mix(state, M)
 
 	rE := state[0]
 	r := big.NewInt(0)
