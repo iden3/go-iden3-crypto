@@ -1,17 +1,79 @@
-issues:
-        max-same-issues: 0
-        exclude-use-default: false
-linters:
-        enable:
-        - whitespace
-        - gosec
-        - gci
-        - misspell
-        - gomnd
-        - gofmt
-        - goimports
-        - lll
-        - golint
+service:
+  golangci-lint-version: 1.39.x
+
+run:
+  timeout: 2m
+  skip-dirs:
+    - vendor
+
 linters-settings:
-        lll:
-                line-length: 100
+  govet:
+    check-shadowing: true
+  revive:
+    min-confidence: 0.1
+    rules:
+      - name: package-comments
+        disabled: true
+  maligned:
+    suggest-new: true
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  misspell:
+    locale: US
+  lll:
+    line-length: 140
+  gocritic:
+    enabled-tags:
+      - performance
+      - style
+      - experimental
+    disabled-checks:
+      - hugeParam
+
+linters:
+  enable:
+    - bodyclose
+    - megacheck
+    - revive
+    - govet
+    - unconvert
+    - megacheck
+    - gas
+    - gocyclo
+    - dupl
+    - misspell
+    - unparam
+    - typecheck
+    - ineffassign
+    - stylecheck
+    - gochecknoinits
+    - exportloopref
+    - gocritic
+    - nakedret
+    - gosimple
+    - prealloc
+    - unused
+
+    ## format - fill free to fix
+#    - errcheck
+#    - gofmt
+#    - goimports
+  fast: false
+  disable-all: true
+
+issues:
+  exclude-rules:
+#    - Fix and remove
+    - text: "at least one file in a package should have a package comment"
+      linters:
+        - stylecheck
+  #    - Fix and remove
+    - text: "should have a package comment, unless it's in another file for this package"
+      linters:
+        - revive
+    - path: _test\.go
+      linters:
+        - gosec
+        - dupl
+  exclude-use-default: false
