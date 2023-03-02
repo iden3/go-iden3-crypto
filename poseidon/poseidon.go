@@ -184,10 +184,12 @@ func HashBytesX(msg []byte, frameSize int) (*big.Int, error) {
 	return hash, nil
 }
 
+// SpongeHash returns a sponge hash of inputs (using Poseidon with frame size of 16 inputs)
 func SpongeHash(inputs []*big.Int) (*big.Int, error) {
 	return SpongeHashX(inputs, spongeInputs)
 }
 
+// SpongeHashX returns a sponge hash of inputs using Poseidon with configurable frame size
 func SpongeHashX(inputs []*big.Int, frameSize int) (*big.Int, error) {
 	if frameSize < 2 || frameSize > 16 {
 		return nil, errors.New("incorrect frame size")
