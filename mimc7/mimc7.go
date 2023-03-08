@@ -23,22 +23,22 @@ type constantsData struct {
 }
 
 func generateConstantsData() constantsData {
-	var constants constantsData
+	var consts constantsData
 
-	constants.seedHash = new(big.Int).SetBytes(keccak256.Hash([]byte(SEED)))
+	consts.seedHash = new(big.Int).SetBytes(keccak256.Hash([]byte(SEED)))
 	c := new(big.Int).SetBytes(keccak256.Hash([]byte(SEED + "_iv")))
-	constants.iv = new(big.Int).Mod(c, _constants.Q)
+	consts.iv = new(big.Int).Mod(c, _constants.Q)
 
-	constants.nRounds = 91
-	cts := getConstants(SEED, constants.nRounds)
-	constants.cts = cts
-	return constants
+	consts.nRounds = 91
+	cts := getConstants(SEED, consts.nRounds)
+	consts.cts = cts
+	return consts
 }
 
 func getConstants(seed string, nRounds int) []*ff.Element {
 	cts := make([]*ff.Element, nRounds)
 	cts[0] = ff.NewElement()
-	c := new(big.Int).SetBytes(keccak256.Hash([]byte(SEED)))
+	c := new(big.Int).SetBytes(keccak256.Hash([]byte(seed)))
 	for i := 1; i < nRounds; i++ {
 		c = new(big.Int).SetBytes(keccak256.Hash(c.Bytes()))
 

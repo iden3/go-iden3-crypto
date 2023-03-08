@@ -9,9 +9,11 @@ import (
 	"github.com/iden3/go-iden3-crypto/utils"
 )
 
-const NROUNDSF = 8 //nolint:golint
+// NROUNDSF constant from Poseidon paper
+const NROUNDSF = 8
 
-var NROUNDSP = []int{56, 57, 56, 60, 60, 63, 64, 63, 60, 66, 60, 65, 70, 60, 64, 68} //nolint:golint
+// NROUNDSP constant from Poseidon paper
+var NROUNDSP = []int{56, 57, 56, 60, 60, 63, 64, 63, 60, 66, 60, 65, 70, 60, 64, 68}
 
 const spongeChunkSize = 31
 const spongeInputs = 16
@@ -20,10 +22,12 @@ func zero() *ff.Element {
 	return ff.NewElement()
 }
 
+var big5 = big.NewInt(5)
+
 // exp5 performs x^5 mod p
 // https://eprint.iacr.org/2019/458.pdf page 8
 func exp5(a *ff.Element) {
-	a.Exp(*a, big.NewInt(5)) //nolint:gomnd
+	a.Exp(*a, big5)
 }
 
 // exp5state perform exp5 for whole state
@@ -34,7 +38,7 @@ func exp5state(state []*ff.Element) {
 }
 
 // ark computes Add-Round Key, from the paper https://eprint.iacr.org/2019/458.pdf
-func ark(state []*ff.Element, c []*ff.Element, it int) {
+func ark(state, c []*ff.Element, it int) {
 	for i := 0; i < len(state); i++ {
 		state[i].Add(state[i], c[it+i])
 	}
@@ -61,12 +65,12 @@ func mix(state []*ff.Element, t int, m [][]*ff.Element) []*ff.Element {
 func Hash(inpBI []*big.Int) (*big.Int, error) {
 	t := len(inpBI) + 1
 	if len(inpBI) == 0 || len(inpBI) > len(NROUNDSP) {
-		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP)) //nolint:gomnd,lll
+		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP))
 	}
-	if !utils.CheckBigIntArrayInField(inpBI[:]) {
+	if !utils.CheckBigIntArrayInField(inpBI) {
 		return nil, errors.New("inputs values not inside Finite Field")
 	}
-	inp := utils.BigIntArrayToElementArray(inpBI[:])
+	inp := utils.BigIntArrayToElementArray(inpBI)
 
 	nRoundsF := NROUNDSF
 	nRoundsP := NROUNDSP[t-2]
@@ -77,7 +81,7 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 
 	state := make([]*ff.Element, t)
 	state[0] = zero()
-	copy(state[1:], inp[:])
+	copy(state[1:], inp)
 
 	ark(state, C, 0)
 
@@ -90,11 +94,12 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 	ark(state, C, (nRoundsF/2)*t)
 	state = mix(state, t, P)
 
+	mul := zero()
 	for i := 0; i < nRoundsP; i++ {
 		exp5(state[0])
 		state[0].Add(state[0], C[(nRoundsF/2+1)*t+i])
 
-		mul := zero()
+		mul.SetZero()
 		newState0 := zero()
 		for j := 0; j < len(state); j++ {
 			mul.Mul(S[(t*2-1)*i+j], state[j])
@@ -102,7 +107,7 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 		}
 
 		for k := 1; k < t; k++ {
-			mul = zero()
+			mul.SetZero()
 			state[k] = state[k].Add(state[k], mul.Mul(state[0], S[(t*2-1)*i+t+k-1]))
 		}
 		state[0] = newState0

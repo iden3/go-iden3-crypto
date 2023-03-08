@@ -46,7 +46,7 @@ func SetBigIntFromLEBytes(v *big.Int, leBuf []byte) *big.Int {
 	return v.SetBytes(beBuf)
 }
 
-// Hex is a byte slice type that can be marshalled and unmarshaled in hex
+// Hex is a byte slice type that can be marshalled and unmarshalled in hex
 type Hex []byte
 
 // MarshalText encodes buf as hex
@@ -72,7 +72,7 @@ func HexDecode(h string) ([]byte, error) {
 
 // HexDecodeInto decodes a hex string into an array of bytes (dst), verifying
 // that the decoded array has the same length as dst.
-func HexDecodeInto(dst []byte, h []byte) error {
+func HexDecodeInto(dst, h []byte) error {
 	if bytes.HasPrefix(h, []byte("0x")) {
 		h = h[2:]
 	}

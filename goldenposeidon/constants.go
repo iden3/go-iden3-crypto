@@ -3,10 +3,14 @@ package poseidon
 import "github.com/iden3/go-iden3-crypto/ffg"
 
 const (
-	NROUNDSF = 8  //nolint:golint
-	NROUNDSP = 22 //nolint:golint
-	CAPLEN   = 4  //nolint:golint
-	mLen     = 12
+	// NROUNDSF const from original paper
+	NROUNDSF = 8
+	// NROUNDSP const from original paper
+	NROUNDSP = 22
+	// CAPLEN const
+	CAPLEN = 4
+	// mLen const
+	mLen = 12
 )
 
 var (

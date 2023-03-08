@@ -47,7 +47,6 @@ linters:
     - typecheck
     - ineffassign
     - stylecheck
-    - gochecknoinits
     - exportloopref
     - gocritic
     - nakedret

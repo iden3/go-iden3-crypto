@@ -87,7 +87,7 @@ func (p *PointProjective) Affine() *Point {
 
 // Add computes the addition of two points in projective coordinates
 // representation
-func (p *PointProjective) Add(q *PointProjective, o *PointProjective) *PointProjective {
+func (p *PointProjective) Add(q, o *PointProjective) *PointProjective {
 	// add-2008-bbjlp
 	// https://hyperelliptic.org/EFD/g1p/auto-twisted-projective.html#doubling-dbl-2008-bbjlp
 	a := ff.NewElement().Mul(q.Z, o.Z)
@@ -209,7 +209,7 @@ func PointCoordSign(c *big.Int) bool {
 func PackSignY(sign bool, y *big.Int) [32]byte {
 	leBuf := utils.BigIntLEBytes(y)
 	if sign {
-		leBuf[31] = leBuf[31] | 0x80 //nolint:gomnd
+		leBuf[31] |= 0x80 //nolint:gomnd
 	}
 	return leBuf
 }
@@ -225,7 +225,7 @@ func UnpackSignY(leBuf [32]byte) (bool, *big.Int) {
 	y := big.NewInt(0)
 	if (leBuf[31] & 0x80) != 0x00 { //nolint:gomnd
 		sign = true
-		leBuf[31] = leBuf[31] & 0x7F //nolint:gomnd
+		leBuf[31] &= 0x7F //nolint:gomnd
 	}
 	utils.SetBigIntFromLEBytes(y, leBuf[:])
 	return sign, y

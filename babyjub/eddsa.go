@@ -1,4 +1,5 @@
 // Package babyjub eddsa implements the EdDSA over the BabyJubJub curve
+//
 //nolint:gomnd
 package babyjub
 
@@ -16,9 +17,9 @@ import (
 // pruneBuffer prunes the buffer during key generation according to RFC 8032.
 // https://tools.ietf.org/html/rfc8032#page-13
 func pruneBuffer(buf *[32]byte) *[32]byte {
-	buf[0] = buf[0] & 0xF8
-	buf[31] = buf[31] & 0x7F
-	buf[31] = buf[31] | 0x40
+	buf[0] &= 0xF8
+	buf[31] &= 0x7F
+	buf[31] |= 0x40
 	return buf
 }
 
@@ -210,7 +211,7 @@ func (sComp *SignatureComp) Scan(src interface{}) error {
 	if len(srcB) != 64 {
 		return fmt.Errorf("can't scan []byte of len %d into Signature, want %d", len(srcB), 64)
 	}
-	copy(sComp[:], srcB[:])
+	copy(sComp[:], srcB)
 	return nil
 }
 
@@ -229,7 +230,7 @@ func (s *Signature) Scan(src interface{}) error {
 		return fmt.Errorf("can't scan []byte of len %d into Signature, want %d", len(srcB), 64)
 	}
 	buf := [64]byte{}
-	copy(buf[:], srcB[:])
+	copy(buf[:], srcB)
 	_, err := s.Decompress(buf)
 	return err
 }
