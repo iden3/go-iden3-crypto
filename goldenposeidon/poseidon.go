@@ -10,9 +10,11 @@ func zero() *ffg.Element {
 	return ffg.NewElement()
 }
 
+var big7 = big.NewInt(7)
+
 // exp7 performs x^7 mod p
 func exp7(a *ffg.Element) {
-	a.Exp(*a, big.NewInt(7)) //nolint:gomnd
+	a.Exp(*a, big7)
 }
 
 // exp7state perform exp7 for whole state

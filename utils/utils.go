@@ -46,7 +46,7 @@ func SetBigIntFromLEBytes(v *big.Int, leBuf []byte) *big.Int {
 	return v.SetBytes(beBuf)
 }
 
-// Hex is a byte slice type that can be marshalled and unmarshaled in hex
+// Hex is a byte slice type that can be marshaled and unmarshaled in hex
 type Hex []byte
 
 // MarshalText encodes buf as hex
@@ -72,7 +72,7 @@ func HexDecode(h string) ([]byte, error) {
 
 // HexDecodeInto decodes a hex string into an array of bytes (dst), verifying
 // that the decoded array has the same length as dst.
-func HexDecodeInto(dst []byte, h []byte) error {
+func HexDecodeInto(dst, h []byte) error {
 	if bytes.HasPrefix(h, []byte("0x")) {
 		h = h[2:]
 	}
@@ -105,21 +105,21 @@ func CheckBigIntArrayInField(arr []*big.Int) bool {
 
 // BigIntArrayToElementArray converts an array of *big.Int into an array of *ff.Element
 func BigIntArrayToElementArray(bi []*big.Int) []*ff.Element {
-	var o []*ff.Element
+	o := make([]*ff.Element, len(bi))
 	for i := range bi {
-		o = append(o, ff.NewElement().SetBigInt(bi[i]))
+		o[i] = ff.NewElement().SetBigInt(bi[i])
 	}
 	return o
 }
 
 // ElementArrayToBigIntArray converts an array of *ff.Element into an array of *big.Int
 func ElementArrayToBigIntArray(e []*ff.Element) []*big.Int {
-	var o []*big.Int
+	o := make([]*big.Int, len(e))
 	for i := range e {
 		ei := e[i]
 		bi := big.NewInt(0)
 		ei.ToBigIntRegular(bi)
-		o = append(o, bi)
+		o[i] = bi
 	}
 	return o
 }
