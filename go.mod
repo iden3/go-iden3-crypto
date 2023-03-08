@@ -6,8 +6,8 @@ require (
 	github.com/dchest/blake512 v1.0.0
 	github.com/leanovate/gopter v0.2.9
 	github.com/stretchr/testify v1.8.2
-	golang.org/x/crypto v0.6.0
-	golang.org/x/sys v0.5.0
+	golang.org/x/crypto v0.7.0
+	golang.org/x/sys v0.6.0
 )
 
 require (
