@@ -48,7 +48,6 @@ linters:
     - ineffassign
     - stylecheck
     - exportloopref
-    - gocritic
     - nakedret
     - gosimple
     - prealloc

@@ -96,7 +96,7 @@ func init() {
 	}
 }
 
-//nolint:lll
+//nolint:lll,dupl // long lines, duplicated parts
 var cs = constantsStr{
 	C: [][]string{{
 		"9c46e9ec68e9bd4fe1faaba294cba38a71aa177534cdd1b6c7dc0dbd0abd7a7",
