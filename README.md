@@ -15,7 +15,7 @@ dual licensed as below, without any additional terms or conditions.
 
 ## License
 
-&copy; 2023 iden3.
+&copy; 2023 0kims Association
 
 This project is licensed under either of
 
