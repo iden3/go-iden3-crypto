@@ -6,7 +6,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/iden3/go-iden3-crypto/poseidon"
+	"github.com/iden3/go-iden3-crypto/babyjub"
+	poseidon "github.com/iden3/go-iden3-crypto/poseidon/wrapper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,12 +23,12 @@ type shadowPublicKey interface {
 }
 
 func TestBjjWrappedPrivateKeyInterfaceImpl(t *testing.T) {
-	require.Implements(t, (*crypto.Signer)(nil), new(BjjWrappedPrivateKey))
-	require.Implements(t, (*shadowPrivateKey)(nil), new(BjjWrappedPrivateKey))
+	require.Implements(t, (*crypto.Signer)(nil), new(PrivateKey))
+	require.Implements(t, (*shadowPrivateKey)(nil), new(PrivateKey))
 }
 
 func TestBjjWrappedPrivateKey(t *testing.T) {
-	pk := RandomBjjWrappedKey()
+	pk := NewRandPrivKey()
 
 	hasher := poseidon.New()
 	hasher.Write([]byte("test"))
@@ -35,7 +36,7 @@ func TestBjjWrappedPrivateKey(t *testing.T) {
 
 	sig, err := pk.Sign(rand.Reader, digest, crypto.Hash(0))
 	require.NoError(t, err)
-	pub, ok := pk.Public().(*BjjWrappedPublicKey)
+	pub, ok := pk.Public().(*PublicKey)
 	require.True(t, ok)
 
 	decomrpessSig, err := decomrpessSig(sig)
@@ -46,25 +47,25 @@ func TestBjjWrappedPrivateKey(t *testing.T) {
 }
 
 func TestBjjWrappedPrivateKeyEqual(t *testing.T) {
-	x1 := RandomBjjWrappedKey()
+	x1 := NewRandPrivKey()
 	require.True(t, x1.Equal(x1))
-	x2 := RandomBjjWrappedKey()
+	x2 := NewRandPrivKey()
 	require.False(t, x1.Equal(x2))
 }
 
 func TestBjjWrappedPublicKeyInterfaceImpl(t *testing.T) {
-	require.Implements(t, (*shadowPublicKey)(nil), new(BjjWrappedPublicKey))
+	require.Implements(t, (*shadowPublicKey)(nil), new(PublicKey))
 }
 
 func TestBjjWrappedPublicKeyEqual(t *testing.T) {
-	x1 := RandomBjjWrappedKey().Public().(*BjjWrappedPublicKey)
+	x1 := NewRandPrivKey().Public().(*PublicKey)
 	require.True(t, x1.Equal(x1))
-	x2 := RandomBjjWrappedKey().Public()
+	x2 := NewRandPrivKey().Public()
 	require.False(t, x1.Equal(x2))
 }
 
-func decomrpessSig(commpresedSig []byte) (*Signature, error) {
-	poseidonComSig := &SignatureComp{}
+func decomrpessSig(commpresedSig []byte) (*babyjub.Signature, error) {
+	poseidonComSig := &babyjub.SignatureComp{}
 	if err := poseidonComSig.UnmarshalText(commpresedSig); err != nil {
 		return nil, err
 	}

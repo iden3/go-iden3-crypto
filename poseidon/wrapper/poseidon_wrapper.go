@@ -1,8 +1,14 @@
+// This package is a wrapper for poseidon package.
+// It is used to implement the standart golang inerface Hash.
+
+
 package poseidon
 
 import (
 	"bytes"
 	"hash"
+
+	"github.com/iden3/go-iden3-crypto/poseidon"
 )
 
 type digest struct {
@@ -30,7 +36,7 @@ func (d *digest) Write(p []byte) (n int, err error) {
 
 // Sum returns the Poseidon checksum of the data.
 func (d *digest) Sum(b []byte) []byte {
-	hahs, err := HashBytes(d.buf.Bytes())
+	hahs, err := poseidon.HashBytes(d.buf.Bytes())
 	if err != nil {
 		panic(err)
 	}
@@ -49,5 +55,5 @@ func (d *digest) Size() int {
 
 // BlockSize returns the hash block size.
 func (d *digest) BlockSize() int {
-	return spongeChunkSize
+	return 31
 }
