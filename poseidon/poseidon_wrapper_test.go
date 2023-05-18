@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -58,12 +57,13 @@ func TestPoseidonWrapperSum(t *testing.T) {
 			inputBytes, err := hex.DecodeString(vector.bytes)
 			require.NoError(t, err)
 
-			hasher := New()
+			hasher, err := New(16)
+			require.NoError(t, err)
 			hasher.Write(inputBytes)
 			res := hasher.Sum(nil)
 
 			require.NotEmpty(t, res)
-			assert.Equal(t, vector.expectedHash, hex.EncodeToString(res))
+			require.Equal(t, vector.expectedHash, hex.EncodeToString(res))
 		})
 	}
 }
@@ -120,7 +120,7 @@ func TestPoseidonNewPoseidon(t *testing.T) {
 			res := NewPoseidon(inputBytes)
 
 			require.NotEmpty(t, res)
-			assert.Equal(t, vector.expectedHash, hex.EncodeToString(res))
+			require.Equal(t, vector.expectedHash, hex.EncodeToString(res))
 		})
 	}
 }

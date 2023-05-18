@@ -29,7 +29,8 @@ func TestBjjWrappedPrivateKeyInterfaceImpl(t *testing.T) {
 func TestBjjWrappedPrivateKey(t *testing.T) {
 	pk := RandomBjjWrappedKey()
 
-	hasher := poseidon.New()
+	hasher, err := poseidon.New(16)
+	require.NoError(t, err)
 	hasher.Write([]byte("test"))
 	digest := hasher.Sum(nil)
 
