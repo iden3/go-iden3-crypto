@@ -63,16 +63,3 @@ func TestBjjWrappedPublicKeyEqual(t *testing.T) {
 	x2 := RandomBjjWrappedKey().Public()
 	require.False(t, x1.Equal(x2))
 }
-
-// DecompressSig decompresses a compressed signature.
-func DecompressSig(commpresedSig []byte) (*Signature, error) {
-	poseidonComSig := &SignatureComp{}
-	if err := poseidonComSig.UnmarshalText(commpresedSig); err != nil {
-		return nil, err
-	}
-	poseidonDecSig, err := poseidonComSig.Decompress()
-	if err != nil {
-		return nil, err
-	}
-	return poseidonDecSig, nil
-}
