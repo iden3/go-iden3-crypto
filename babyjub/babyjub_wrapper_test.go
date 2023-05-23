@@ -39,7 +39,7 @@ func TestBjjWrappedPrivateKey(t *testing.T) {
 	pub, ok := pk.Public().(*BjjWrappedPublicKey)
 	require.True(t, ok)
 
-	decomrpessSig, err := decomrpessSig(sig)
+	decomrpessSig, err := DecompressSig(sig)
 	require.NoError(t, err)
 
 	digestBI := big.NewInt(0).SetBytes(digest)
@@ -64,7 +64,8 @@ func TestBjjWrappedPublicKeyEqual(t *testing.T) {
 	require.False(t, x1.Equal(x2))
 }
 
-func decomrpessSig(commpresedSig []byte) (*Signature, error) {
+// DecompressSig decompresses a compressed signature.
+func DecompressSig(commpresedSig []byte) (*Signature, error) {
 	poseidonComSig := &SignatureComp{}
 	if err := poseidonComSig.UnmarshalText(commpresedSig); err != nil {
 		return nil, err

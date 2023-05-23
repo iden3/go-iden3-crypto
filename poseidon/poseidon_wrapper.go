@@ -11,9 +11,9 @@ type digest struct {
 	frameSize int
 }
 
-// NewPoseidon returns the Poseidon hash of the input bytes.
+// Sum returns the Poseidon hash of the input bytes.
 // use frame size of 16 inputs by default
-func NewPoseidon(b []byte) []byte {
+func Sum(b []byte) []byte {
 	h, _ := New(16)
 	h.Write(b)
 	return h.Sum(nil)
