@@ -34,19 +34,19 @@ var B8 *Point
 
 // init initializes global numbers and the subgroup base.
 func init() {
-	A = utils.NewIntFromString("168700")
-	D = utils.NewIntFromString("168696")
+	A, _ = utils.NewIntFromString("168700")
+	D, _ = utils.NewIntFromString("168696")
 	Aff = ff.NewElement().SetBigInt(A)
 	Dff = ff.NewElement().SetBigInt(D)
 
-	Order = utils.NewIntFromString(
+	Order, _ = utils.NewIntFromString(
 		"21888242871839275222246405745257275088614511777268538073601725287587578984328")
 	SubOrder = new(big.Int).Rsh(Order, 3) //nolint:gomnd
 
 	B8 = NewPoint()
-	B8.X = utils.NewIntFromString(
+	B8.X, _ = utils.NewIntFromString(
 		"5299619240641551281634865583518297030282874472190772894086521144482721001553")
-	B8.Y = utils.NewIntFromString(
+	B8.Y, _ = utils.NewIntFromString(
 		"16950150798460657717958625567821834550301663161624707787222815936182638968203")
 }
 

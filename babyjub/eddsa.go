@@ -28,13 +28,13 @@ type PrivateKey [32]byte
 
 // NewRandPrivKey generates a new random private key (using cryptographically
 // secure randomness).
-func NewRandPrivKey() PrivateKey {
+func NewRandPrivKey() (PrivateKey, error) {
 	var k PrivateKey
 	_, err := rand.Read(k[:])
 	if err != nil {
-		panic(err)
+		return PrivateKey{}, err
 	}
-	return k
+	return k, nil
 }
 
 // Scalar converts a private key into the scalar value s following the EdDSA

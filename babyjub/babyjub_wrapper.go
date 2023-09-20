@@ -38,9 +38,12 @@ func NewBjjWrappedKey(privKey *PrivateKey) *BjjWrappedPrivateKey {
 }
 
 // RandomBjjWrappedKey creates a new BjjWrappedPrivateKey with a random private key.
-func RandomBjjWrappedKey() *BjjWrappedPrivateKey {
-	privKey := NewRandPrivKey()
-	return NewBjjWrappedKey(&privKey)
+func RandomBjjWrappedKey() (*BjjWrappedPrivateKey, error) {
+	privKey, err := NewRandPrivKey()
+	if err != nil {
+		return nil, err
+	}
+	return NewBjjWrappedKey(&privKey), nil
 }
 
 // Public returns the public key of the private key.

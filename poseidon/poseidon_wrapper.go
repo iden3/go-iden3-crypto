@@ -37,11 +37,11 @@ func (h *hasher) Write(p []byte) (n int, err error) {
 
 // Sum returns the Poseidon digest of the data.
 func (h *hasher) Sum(b []byte) []byte {
-	hahs, err := HashBytesX(h.buf.Bytes(), h.frameSize)
+	res, err := HashBytesX(h.buf.Bytes(), h.frameSize)
 	if err != nil {
 		panic(err)
 	}
-	return append(b, hahs.Bytes()...)
+	return append(b, res.Bytes()...)
 }
 
 // Reset resets the Hash to its initial state.

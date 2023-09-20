@@ -27,7 +27,7 @@ func TestBjjWrappedPrivateKeyInterfaceImpl(t *testing.T) {
 }
 
 func TestBjjWrappedPrivateKey(t *testing.T) {
-	pk := RandomBjjWrappedKey()
+	pk, _ := RandomBjjWrappedKey()
 
 	hasher, err := poseidon.New(16)
 	require.NoError(t, err)
@@ -43,13 +43,14 @@ func TestBjjWrappedPrivateKey(t *testing.T) {
 	require.NoError(t, err)
 
 	digestBI := big.NewInt(0).SetBytes(digest)
-	pub.pubKey.VerifyPoseidon(digestBI, decomrpessSig)
+	err = pub.pubKey.VerifyPoseidon(digestBI, decomrpessSig)
+	require.NoError(t, err)
 }
 
 func TestBjjWrappedPrivateKeyEqual(t *testing.T) {
-	x1 := RandomBjjWrappedKey()
+	x1, _ := RandomBjjWrappedKey()
 	require.True(t, x1.Equal(x1))
-	x2 := RandomBjjWrappedKey()
+	x2, _ := RandomBjjWrappedKey()
 	require.False(t, x1.Equal(x2))
 }
 
@@ -58,8 +59,11 @@ func TestBjjWrappedPublicKeyInterfaceImpl(t *testing.T) {
 }
 
 func TestBjjWrappedPublicKeyEqual(t *testing.T) {
-	x1 := RandomBjjWrappedKey().Public().(*BjjWrappedPublicKey)
-	require.True(t, x1.Equal(x1))
-	x2 := RandomBjjWrappedKey().Public()
-	require.False(t, x1.Equal(x2))
+	x1, _ := RandomBjjWrappedKey()
+	x1pub := x1.Public().(*BjjWrappedPublicKey)
+	require.True(t, x1pub.Equal(x1pub))
+	require.True(t, x1pub.Equal(x1.Public()))
+	x2, _ := RandomBjjWrappedKey()
+	x2pub := x2.Public()
+	require.False(t, x1pub.Equal(x2pub))
 }
