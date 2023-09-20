@@ -43,7 +43,8 @@ func TestSignVerifyMimc7(t *testing.T) {
 		"13622229784656158136036771217484571176836296686641868549125388198837476602820",
 		pk.Y.String())
 
-	sig := k.SignMimc7(msg)
+	sig, err := k.SignMimc7(msg)
+	assert.NoError(t, err)
 	assert.Equal(t,
 		"11384336176656855268977457483345535180380036354188103142384839473266348197733",
 		sig.R8.X.String())
@@ -54,20 +55,20 @@ func TestSignVerifyMimc7(t *testing.T) {
 		"2523202440825208709475937830811065542425109372212752003460238913256192595070",
 		sig.S.String())
 
-	ok := pk.VerifyMimc7(msg, sig)
-	assert.Equal(t, true, ok)
+	err = pk.VerifyMimc7(msg, sig)
+	assert.NoError(t, err)
 
 	sigBuf := sig.Compress()
 	sig2, err := new(Signature).Decompress(sigBuf)
-	assert.Equal(t, nil, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, ""+
 		"dfedb4315d3f2eb4de2d3c510d7a987dcab67089c8ace06308827bf5bcbe02a2"+
 		"7ed40dab29bf993c928e789d007387998901a24913d44fddb64b1f21fc149405",
 		hex.EncodeToString(sigBuf[:]))
 
-	ok = pk.VerifyMimc7(msg, sig2)
-	assert.Equal(t, true, ok)
+	err = pk.VerifyMimc7(msg, sig2)
+	assert.NoError(t, err)
 }
 
 func TestSignVerifyPoseidon(t *testing.T) {
@@ -89,7 +90,8 @@ func TestSignVerifyPoseidon(t *testing.T) {
 		"13622229784656158136036771217484571176836296686641868549125388198837476602820",
 		pk.Y.String())
 
-	sig := k.SignPoseidon(msg)
+	sig, err := k.SignPoseidon(msg)
+	assert.NoError(t, err)
 	assert.Equal(t,
 		"11384336176656855268977457483345535180380036354188103142384839473266348197733",
 		sig.R8.X.String())
@@ -100,20 +102,20 @@ func TestSignVerifyPoseidon(t *testing.T) {
 		"1672775540645840396591609181675628451599263765380031905495115170613215233181",
 		sig.S.String())
 
-	ok := pk.VerifyPoseidon(msg, sig)
-	assert.Equal(t, true, ok)
+	err = pk.VerifyPoseidon(msg, sig)
+	assert.NoError(t, err)
 
 	sigBuf := sig.Compress()
 	sig2, err := new(Signature).Decompress(sigBuf)
-	assert.Equal(t, nil, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, ""+
 		"dfedb4315d3f2eb4de2d3c510d7a987dcab67089c8ace06308827bf5bcbe02a2"+
 		"9d043ece562a8f82bfc0adb640c0107a7d3a27c1c7c1a6179a0da73de5c1b203",
 		hex.EncodeToString(sigBuf[:]))
 
-	ok = pk.VerifyPoseidon(msg, sig2)
-	assert.Equal(t, true, ok)
+	err = pk.VerifyPoseidon(msg, sig2)
+	assert.NoError(t, err)
 }
 
 func TestCompressDecompress(t *testing.T) {
@@ -128,22 +130,28 @@ func TestCompressDecompress(t *testing.T) {
 			panic(err)
 		}
 		msg := utils.SetBigIntFromLEBytes(new(big.Int), msgBuf)
-		sig := k.SignMimc7(msg)
+		sig, err := k.SignMimc7(msg)
+		assert.NoError(t, err)
 		sigBuf := sig.Compress()
 		sig2, err := new(Signature).Decompress(sigBuf)
-		assert.Equal(t, nil, err)
-		ok := pk.VerifyMimc7(msg, sig2)
-		assert.Equal(t, true, ok)
+		assert.NoError(t, err)
+		err = pk.VerifyMimc7(msg, sig2)
+		assert.NoError(t, err)
 	}
 }
 
 func TestSignatureCompScannerValuer(t *testing.T) {
 	privK := NewRandPrivKey()
+	var err error
+	sig, err := privK.SignPoseidon(big.NewInt(674238462))
+	assert.NoError(t, err)
 	var value driver.Valuer //nolint:gosimple // this is done to ensure interface compatibility
-	value = privK.SignPoseidon(big.NewInt(674238462)).Compress()
-	scan := privK.SignPoseidon(big.NewInt(1)).Compress()
+	value = sig.Compress()
+	sig, err = privK.SignPoseidon(big.NewInt(1))
+	assert.NoError(t, err)
+	scan := sig.Compress()
 	fromDB, err := value.Value()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, scan.Scan(fromDB))
 	assert.Equal(t, value, scan)
 }
@@ -152,10 +160,13 @@ func TestSignatureScannerValuer(t *testing.T) {
 	privK := NewRandPrivKey()
 	var value driver.Valuer
 	var scan sql.Scanner
-	value = privK.SignPoseidon(big.NewInt(674238462))
-	scan = privK.SignPoseidon(big.NewInt(1))
+	var err error
+	value, err = privK.SignPoseidon(big.NewInt(674238462))
+	assert.NoError(t, err)
+	scan, err = privK.SignPoseidon(big.NewInt(1))
+	assert.NoError(t, err)
 	fromDB, err := value.Value()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, scan.Scan(fromDB))
 	assert.Equal(t, value, scan)
 }
@@ -217,12 +228,12 @@ func BenchmarkBabyjubEddsa(b *testing.B) {
 	})
 
 	for i := 0; i < n; i++ {
-		sigs[i%n] = k.SignMimc7(msgs[i%n])
+		sigs[i%n], _ = k.SignMimc7(msgs[i%n])
 	}
 
 	b.Run("VerifyMimc7", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			pk.VerifyMimc7(msgs[i%n], sigs[i%n])
+			_ = pk.VerifyMimc7(msgs[i%n], sigs[i%n])
 		}
 	})
 
@@ -233,12 +244,12 @@ func BenchmarkBabyjubEddsa(b *testing.B) {
 	})
 
 	for i := 0; i < n; i++ {
-		sigs[i%n] = k.SignPoseidon(msgs[i%n])
+		sigs[i%n], _ = k.SignPoseidon(msgs[i%n])
 	}
 
 	b.Run("VerifyPoseidon", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			pk.VerifyPoseidon(msgs[i%n], sigs[i%n])
+			_ = pk.VerifyPoseidon(msgs[i%n], sigs[i%n])
 		}
 	})
 }

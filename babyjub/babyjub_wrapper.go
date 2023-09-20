@@ -62,7 +62,10 @@ func (w *BjjWrappedPrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.S
 	}
 
 	digestBI := big.NewInt(0).SetBytes(digest)
-	sig := w.privKey.SignPoseidon(digestBI)
+	sig, err := w.privKey.SignPoseidon(digestBI)
+	if err != nil {
+		return nil, err
+	}
 	return sig.Compress().MarshalText()
 }
 
