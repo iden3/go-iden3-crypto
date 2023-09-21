@@ -8,8 +8,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/iden3/go-iden3-crypto/constants"
-	"github.com/iden3/go-iden3-crypto/utils"
+	"github.com/iden3/go-iden3-crypto/v2/constants"
+	"github.com/iden3/go-iden3-crypto/v2/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
