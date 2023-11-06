@@ -107,7 +107,7 @@ func CheckBigIntArrayInField(arr []*big.Int) bool {
 func BigIntArrayToElementArray(bi []*big.Int) []*ff.Element {
 	o := make([]*ff.Element, len(bi))
 	for i := range bi {
-		o[i] = ff.NewElement().SetBigInt(bi[i])
+		o[i] = new(ff.Element).SetBigInt(bi[i])
 	}
 	return o
 }
@@ -118,7 +118,7 @@ func ElementArrayToBigIntArray(e []*ff.Element) []*big.Int {
 	for i := range e {
 		ei := e[i]
 		bi := big.NewInt(0)
-		ei.ToBigIntRegular(bi)
+		ei.BigInt(bi)
 		o[i] = bi
 	}
 	return o

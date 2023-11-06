@@ -37,13 +37,13 @@ func generateConstantsData() constantsData {
 
 func getConstants(seed string, nRounds int) []*ff.Element {
 	cts := make([]*ff.Element, nRounds)
-	cts[0] = ff.NewElement()
+	cts[0] = new(ff.Element)
 	c := new(big.Int).SetBytes(keccak256.Hash([]byte(seed)))
 	for i := 1; i < nRounds; i++ {
 		c = new(big.Int).SetBytes(keccak256.Hash(c.Bytes()))
 
 		n := new(big.Int).Mod(c, _constants.Q)
-		cts[i] = ff.NewElement().SetBigInt(n)
+		cts[i] = new(ff.Element).SetBigInt(n)
 	}
 	return cts
 }
@@ -51,23 +51,23 @@ func getConstants(seed string, nRounds int) []*ff.Element {
 // MIMC7HashGeneric performs the MIMC7 hash over a *big.Int, in a generic way,
 // where it can be specified the Finite Field over R, and the number of rounds
 func MIMC7HashGeneric(xInBI, kBI *big.Int, nRounds int) *big.Int { //nolint:golint
-	xIn := ff.NewElement().SetBigInt(xInBI)
-	k := ff.NewElement().SetBigInt(kBI)
+	xIn := new(ff.Element).SetBigInt(xInBI)
+	k := new(ff.Element).SetBigInt(kBI)
 
 	cts := getConstants(SEED, nRounds)
 	var r *ff.Element
 	for i := 0; i < nRounds; i++ {
 		var t *ff.Element
 		if i == 0 {
-			t = ff.NewElement().Add(xIn, k)
+			t = new(ff.Element).Add(xIn, k)
 		} else {
-			t = ff.NewElement().Add(ff.NewElement().Add(r, k), cts[i])
+			t = new(ff.Element).Add(new(ff.Element).Add(r, k), cts[i])
 		}
-		t2 := ff.NewElement().Square(t)
-		t4 := ff.NewElement().Square(t2)
-		r = ff.NewElement().Mul(ff.NewElement().Mul(t4, t2), t)
+		t2 := new(ff.Element).Square(t)
+		t4 := new(ff.Element).Square(t2)
+		r = new(ff.Element).Mul(new(ff.Element).Mul(t4, t2), t)
 	}
-	rE := ff.NewElement().Add(r, k)
+	rE := new(ff.Element).Add(r, k)
 
 	res := big.NewInt(0)
 	rE.ToBigIntRegular(res)
@@ -94,22 +94,22 @@ func HashGeneric(iv *big.Int, arr []*big.Int, nRounds int) (*big.Int, error) {
 // MIMC7Hash performs the MIMC7 hash over a *big.Int, using the Finite Field
 // over R and the number of rounds setted in the `constants` variable
 func MIMC7Hash(xInBI, kBI *big.Int) *big.Int { //nolint:golint
-	xIn := ff.NewElement().SetBigInt(xInBI)
-	k := ff.NewElement().SetBigInt(kBI)
+	xIn := new(ff.Element).SetBigInt(xInBI)
+	k := new(ff.Element).SetBigInt(kBI)
 
 	var r *ff.Element
 	for i := 0; i < constants.nRounds; i++ {
 		var t *ff.Element
 		if i == 0 {
-			t = ff.NewElement().Add(xIn, k)
+			t = new(ff.Element).Add(xIn, k)
 		} else {
-			t = ff.NewElement().Add(ff.NewElement().Add(r, k), constants.cts[i])
+			t = new(ff.Element).Add(new(ff.Element).Add(r, k), constants.cts[i])
 		}
-		t2 := ff.NewElement().Square(t)
-		t4 := ff.NewElement().Square(t2)
-		r = ff.NewElement().Mul(ff.NewElement().Mul(t4, t2), t)
+		t2 := new(ff.Element).Square(t)
+		t4 := new(ff.Element).Square(t2)
+		r = new(ff.Element).Mul(new(ff.Element).Mul(t4, t2), t)
 	}
-	rE := ff.NewElement().Add(r, k)
+	rE := new(ff.Element).Add(r, k)
 
 	res := big.NewInt(0)
 	rE.ToBigIntRegular(res)
