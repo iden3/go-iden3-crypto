@@ -36,8 +36,8 @@ var B8 *Point
 func init() {
 	A, _ = utils.NewIntFromString("168700")
 	D, _ = utils.NewIntFromString("168696")
-	Aff = ff.NewElement().SetBigInt(A)
-	Dff = ff.NewElement().SetBigInt(D)
+	Aff = new(ff.Element).SetBigInt(A)
+	Dff = new(ff.Element).SetBigInt(D)
 
 	Order, _ = utils.NewIntFromString(
 		"21888242871839275222246405745257275088614511777268538073601725287587578984328")
@@ -59,26 +59,26 @@ type PointProjective struct {
 
 // NewPointProjective creates a new Point in projective coordinates.
 func NewPointProjective() *PointProjective {
-	return &PointProjective{X: ff.NewElement().SetZero(),
-		Y: ff.NewElement().SetOne(), Z: ff.NewElement().SetOne()}
+	return &PointProjective{X: new(ff.Element).SetZero(),
+		Y: new(ff.Element).SetOne(), Z: new(ff.Element).SetOne()}
 }
 
 // Affine returns the Point from the projective representation
 func (p *PointProjective) Affine() *Point {
-	if p.Z.Equal(ff.NewElement().SetZero()) {
+	if p.Z.Equal(new(ff.Element).SetZero()) {
 		return &Point{
 			X: big.NewInt(0),
 			Y: big.NewInt(0),
 		}
 	}
-	zinv := ff.NewElement().Inverse(p.Z)
-	x := ff.NewElement().Mul(p.X, zinv)
+	zinv := new(ff.Element).Inverse(p.Z)
+	x := new(ff.Element).Mul(p.X, zinv)
 
-	y := ff.NewElement().Mul(p.Y, zinv)
+	y := new(ff.Element).Mul(p.Y, zinv)
 	xBig := big.NewInt(0)
-	x.ToBigIntRegular(xBig)
+	x.BigInt(xBig)
 	yBig := big.NewInt(0)
-	y.ToBigIntRegular(yBig)
+	y.BigInt(yBig)
 	return &Point{
 		X: xBig,
 		Y: yBig,
@@ -90,26 +90,26 @@ func (p *PointProjective) Affine() *Point {
 func (p *PointProjective) Add(q, o *PointProjective) *PointProjective {
 	// add-2008-bbjlp
 	// https://hyperelliptic.org/EFD/g1p/auto-twisted-projective.html#doubling-dbl-2008-bbjlp
-	a := ff.NewElement().Mul(q.Z, o.Z)
-	b := ff.NewElement().Square(a)
-	c := ff.NewElement().Mul(q.X, o.X)
-	d := ff.NewElement().Mul(q.Y, o.Y)
-	e := ff.NewElement().Mul(Dff, c)
+	a := new(ff.Element).Mul(q.Z, o.Z)
+	b := new(ff.Element).Square(a)
+	c := new(ff.Element).Mul(q.X, o.X)
+	d := new(ff.Element).Mul(q.Y, o.Y)
+	e := new(ff.Element).Mul(Dff, c)
 	e.Mul(e, d)
-	f := ff.NewElement().Sub(b, e)
-	g := ff.NewElement().Add(b, e)
-	x1y1 := ff.NewElement().Add(q.X, q.Y)
-	x2y2 := ff.NewElement().Add(o.X, o.Y)
-	x3 := ff.NewElement().Mul(x1y1, x2y2)
+	f := new(ff.Element).Sub(b, e)
+	g := new(ff.Element).Add(b, e)
+	x1y1 := new(ff.Element).Add(q.X, q.Y)
+	x2y2 := new(ff.Element).Add(o.X, o.Y)
+	x3 := new(ff.Element).Mul(x1y1, x2y2)
 	x3.Sub(x3, c)
 	x3.Sub(x3, d)
 	x3.Mul(x3, a)
 	x3.Mul(x3, f)
-	ac := ff.NewElement().Mul(Aff, c)
-	y3 := ff.NewElement().Sub(d, ac)
+	ac := new(ff.Element).Mul(Aff, c)
+	y3 := new(ff.Element).Sub(d, ac)
 	y3.Mul(y3, a)
 	y3.Mul(y3, g)
-	z3 := ff.NewElement().Mul(f, g)
+	z3 := new(ff.Element).Mul(f, g)
 
 	p.X = x3
 	p.Y = y3
@@ -138,9 +138,9 @@ func (p *Point) Set(c *Point) *Point {
 // Projective returns a PointProjective from the Point
 func (p *Point) Projective() *PointProjective {
 	return &PointProjective{
-		X: ff.NewElement().SetBigInt(p.X),
-		Y: ff.NewElement().SetBigInt(p.Y),
-		Z: ff.NewElement().SetOne(),
+		X: new(ff.Element).SetBigInt(p.X),
+		Y: new(ff.Element).SetBigInt(p.Y),
+		Z: new(ff.Element).SetOne(),
 	}
 }
 
@@ -148,9 +148,9 @@ func (p *Point) Projective() *PointProjective {
 // which is also returned.
 func (p *Point) Mul(s *big.Int, q *Point) *Point {
 	resProj := &PointProjective{
-		X: ff.NewElement().SetZero(),
-		Y: ff.NewElement().SetOne(),
-		Z: ff.NewElement().SetOne(),
+		X: new(ff.Element).SetZero(),
+		Y: new(ff.Element).SetOne(),
+		Z: new(ff.Element).SetOne(),
 	}
 	exp := q.Projective()
 

@@ -46,7 +46,7 @@ func init() {
 			if !ok {
 				panic(fmt.Errorf("error parsing constants"))
 			}
-			cci[j] = ff.NewElement().SetBigInt(b)
+			cci[j] = new(ff.Element).SetBigInt(b)
 		}
 		c.c[i] = cci
 	}
@@ -58,7 +58,7 @@ func init() {
 			if !ok {
 				panic(fmt.Errorf("error parsing constants"))
 			}
-			csi[j] = ff.NewElement().SetBigInt(b)
+			csi[j] = new(ff.Element).SetBigInt(b)
 		}
 		c.s[i] = csi
 	}
@@ -72,7 +72,7 @@ func init() {
 				if !ok {
 					panic(fmt.Errorf("error parsing constants"))
 				}
-				cmij[k] = ff.NewElement().SetBigInt(b)
+				cmij[k] = new(ff.Element).SetBigInt(b)
 			}
 			cmi[j] = cmij
 		}
@@ -88,7 +88,7 @@ func init() {
 				if !ok {
 					panic(fmt.Errorf("error parsing constants"))
 				}
-				cpij[k] = ff.NewElement().SetBigInt(b)
+				cpij[k] = new(ff.Element).SetBigInt(b)
 			}
 			cpi[j] = cpij
 		}
