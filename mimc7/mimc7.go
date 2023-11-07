@@ -70,7 +70,7 @@ func MIMC7HashGeneric(xInBI, kBI *big.Int, nRounds int) *big.Int { //nolint:goli
 	rE := new(ff.Element).Add(r, k)
 
 	res := big.NewInt(0)
-	rE.ToBigIntRegular(res)
+	rE.BigInt(res)
 	return res
 }
 
@@ -112,7 +112,7 @@ func MIMC7Hash(xInBI, kBI *big.Int) *big.Int { //nolint:golint
 	rE := new(ff.Element).Add(r, k)
 
 	res := big.NewInt(0)
-	rE.ToBigIntRegular(res)
+	rE.BigInt(res)
 	return res
 }
 
