@@ -61,8 +61,8 @@ func mix(state []*ff.Element, t int, m [][]*ff.Element) []*ff.Element {
 	return newState
 }
 
-// Hash computes the Poseidon hash for the given inputs
-func Hash(inpBI []*big.Int) (*big.Int, error) {
+// HashWithState computes the Poseidon hash for the given inputs and initState
+func HashWithState(inpBI []*big.Int, initState *big.Int) (*big.Int, error) {
 	t := len(inpBI) + 1
 	if len(inpBI) == 0 || len(inpBI) > len(NROUNDSP) {
 		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP))
@@ -80,7 +80,11 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 	P := c.p[t-2]
 
 	state := make([]*ff.Element, t)
-	state[0] = zero()
+	if !utils.CheckBigIntInField(initState) {
+		return nil, errors.New("initState values not inside Finite Field")
+	}
+
+	state[0] = ff.NewElement().SetBigInt(initState)
 	copy(state[1:], inp)
 
 	ark(state, C, 0)
@@ -125,6 +129,11 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 	r := big.NewInt(0)
 	rE.ToBigIntRegular(r)
 	return r, nil
+}
+
+// Hash computes the Poseidon hash for the given inputs
+func Hash(inpBI []*big.Int) (*big.Int, error) {
+	return HashWithState(inpBI, big.NewInt(0))
 }
 
 // HashBytes returns a sponge hash of a msg byte slice split into blocks of 31 bytes
