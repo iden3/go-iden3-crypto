@@ -63,6 +63,11 @@ func mix(state []*ff.Element, t int, m [][]*ff.Element) []*ff.Element {
 
 // Hash computes the Poseidon hash for the given inputs
 func Hash(inpBI []*big.Int) (*big.Int, error) {
+	return HashEx(inpBI, big.NewInt(0))
+}
+
+// HashEx computes the Poseidon hash for the given inputs and given initialState
+func HashEx(inpBI []*big.Int, initialState *big.Int) (*big.Int, error) {
 	t := len(inpBI) + 1
 	if len(inpBI) == 0 || len(inpBI) > len(NROUNDSP) {
 		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP))
@@ -80,7 +85,7 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 	P := c.p[t-2]
 
 	state := make([]*ff.Element, t)
-	state[0] = zero()
+	state[0] = ff.NewElement().SetBigInt(initialState)
 	copy(state[1:], inp)
 
 	ark(state, C, 0)

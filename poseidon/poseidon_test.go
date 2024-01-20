@@ -95,6 +95,25 @@ func TestPoseidonHash(t *testing.T) {
 		h.String())
 }
 
+func TestPoseidonHashEx(t *testing.T) {
+	b0 := big.NewInt(0)
+	b1 := big.NewInt(1)
+	b2 := big.NewInt(2)
+	b3 := big.NewInt(3)
+
+	h, err := HashEx([]*big.Int{b1, b2}, b0)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"7853200120776062878684798364095072458815029376092732009249414926327459813530",
+		h.String())
+
+	h, err = HashEx([]*big.Int{b1, b2}, b3)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"18983173721955286408381200682584471402668031072231079754401407247299446548040",
+		h.String())
+}
+
 func TestErrorInputs(t *testing.T) {
 	b0 := big.NewInt(0)
 	b1 := big.NewInt(1)
