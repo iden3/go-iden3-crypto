@@ -128,6 +128,47 @@ func TestInputsNotInField(t *testing.T) {
 	require.Error(t, err, "inputs values not inside Finite Field")
 }
 
+func TestHashWithState(t *testing.T) {
+	initState0 := big.NewInt(0)
+	initState1 := big.NewInt(7)
+
+	b1 := big.NewInt(1)
+	b2 := big.NewInt(2)
+	b3 := big.NewInt(3)
+	b4 := big.NewInt(4)
+	b5 := big.NewInt(5)
+	b6 := big.NewInt(6)
+
+	h, err := HashWithState([]*big.Int{b1, b2, b3, b4, b5, b6}, initState0)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"20400040500897583745843009878988256314335038853985262692600694741116813247201",
+		h.String())
+
+	h, err = HashWithState([]*big.Int{b1, b2, b3, b4}, initState1)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"1569211601569591254857354699102545060324851338714426496554851741114291465006",
+		h.String())
+}
+
+func TestInitStateNotInField(t *testing.T) {
+	var err error
+
+	b0 := big.NewInt(0)
+	b1 := big.NewInt(1)
+
+	// Very big number, should just return error and not go into endless loop
+	initState := utils.NewIntFromString("12242166908188651009877250812424843524687801523336557272219921456462821518061999999999999999999999999999999999999999999999999999999999")
+	_, err = HashWithState([]*big.Int{b0, b1}, initState)
+	require.Error(t, err, "initState values not inside Finite Field")
+
+	// Finite Field const Q, should return error
+	initState = utils.NewIntFromString("21888242871839275222246405745257275088548364400416034343698204186575808495617")
+	_, err = HashWithState([]*big.Int{b0, b1}, initState)
+	require.Error(t, err, "initState values not inside Finite Field")
+}
+
 func TestHashBytes(t *testing.T) {
 	type testVector struct {
 		bytes        string
