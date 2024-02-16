@@ -128,6 +128,64 @@ func TestInputsNotInField(t *testing.T) {
 	require.Error(t, err, "inputs values not inside Finite Field")
 }
 
+func TestHashWithState(t *testing.T) {
+	initState0 := big.NewInt(0)
+	initState1 := big.NewInt(7)
+
+	b1 := big.NewInt(1)
+	b2 := big.NewInt(2)
+	b3 := big.NewInt(3)
+	b4 := big.NewInt(4)
+	b5 := big.NewInt(5)
+	b6 := big.NewInt(6)
+	b7 := big.NewInt(7)
+	b8 := big.NewInt(8)
+	b9 := big.NewInt(9)
+	b10 := big.NewInt(10)
+	b11 := big.NewInt(11)
+	b12 := big.NewInt(12)
+	b13 := big.NewInt(13)
+	b14 := big.NewInt(14)
+	b15 := big.NewInt(15)
+	b16 := big.NewInt(16)
+	b17 := big.NewInt(17)
+
+	h, err := HashWithState([]*big.Int{b1, b2, b3, b4, b5, b6}, initState0)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"20400040500897583745843009878988256314335038853985262692600694741116813247201",
+		h.String())
+
+	h, err = HashWithState([]*big.Int{b1, b2, b3, b4}, initState1)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"1569211601569591254857354699102545060324851338714426496554851741114291465006",
+		h.String())
+
+	h, err = HashWithState([]*big.Int{b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16}, b17)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"7865037705064445207187340054656830232157001572238023180016026650118519857086",
+		h.String())
+}
+
+func TestInitStateNotInField(t *testing.T) {
+	var err error
+
+	b0 := big.NewInt(0)
+	b1 := big.NewInt(1)
+
+	// Very big number, should just return error and not go into endless loop
+	initState := utils.NewIntFromString("12242166908188651009877250812424843524687801523336557272219921456462821518061999999999999999999999999999999999999999999999999999999999")
+	_, err = HashWithState([]*big.Int{b0, b1}, initState)
+	require.Error(t, err, "initState values not inside Finite Field")
+
+	// Finite Field const Q, should return error
+	initState = utils.NewIntFromString("21888242871839275222246405745257275088548364400416034343698204186575808495617")
+	_, err = HashWithState([]*big.Int{b0, b1}, initState)
+	require.Error(t, err, "initState values not inside Finite Field")
+}
+
 func TestHashBytes(t *testing.T) {
 	type testVector struct {
 		bytes        string
