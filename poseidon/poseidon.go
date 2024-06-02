@@ -19,7 +19,7 @@ const spongeChunkSize = 31
 const spongeInputs = 16
 
 func zero() *ff.Element {
-	return ff.NewElement()
+	return &ff.Element{}
 }
 
 var big5 = big.NewInt(5)
@@ -127,7 +127,7 @@ func HashWithState(inpBI []*big.Int, initState *big.Int) (*big.Int, error) {
 
 	rE := state[0]
 	r := big.NewInt(0)
-	rE.ToBigIntRegular(r)
+	rE.BigInt(r)
 	return r, nil
 }
 
