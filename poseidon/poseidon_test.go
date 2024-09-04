@@ -95,6 +95,103 @@ func TestPoseidonHash(t *testing.T) {
 		h.String())
 }
 
+func TestPoseidonHashEx(t *testing.T) {
+	b0 := big.NewInt(0)
+	b1 := big.NewInt(1)
+	b2 := big.NewInt(2)
+	b3 := big.NewInt(3)
+	b4 := big.NewInt(4)
+	b5 := big.NewInt(5)
+	b6 := big.NewInt(6)
+	b7 := big.NewInt(7)
+	b8 := big.NewInt(8)
+	b9 := big.NewInt(9)
+	b10 := big.NewInt(10)
+	b11 := big.NewInt(11)
+	b12 := big.NewInt(12)
+	b13 := big.NewInt(13)
+	b14 := big.NewInt(14)
+	b15 := big.NewInt(15)
+	b16 := big.NewInt(16)
+
+	h, err := HashEx([]*big.Int{b1}, 1)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"18586133768512220936620570745912940619677854269274689475585506675881198879027",
+		h[0].String())
+	assert.Equal(t, 1, len(h))
+
+	h, err = HashEx([]*big.Int{b1, b2}, 2)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"7853200120776062878684798364095072458815029376092732009249414926327459813530",
+		h[0].String())
+	assert.Equal(t, 2, len(h))
+
+	h, err = HashEx([]*big.Int{b1, b2, b0, b0, b0}, 3)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"1018317224307729531995786483840663576608797660851238720571059489595066344487",
+		h[0].String())
+	assert.Equal(t, 3, len(h))
+
+	h, err = HashEx([]*big.Int{b1, b2, b0, b0, b0, b0}, 4)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"15336558801450556532856248569924170992202208561737609669134139141992924267169",
+		h[0].String())
+	assert.Equal(t, 4, len(h))
+
+	h, err = HashEx([]*big.Int{b3, b4, b0, b0, b0}, 5)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"5811595552068139067952687508729883632420015185677766880877743348592482390548",
+		h[0].String())
+	assert.Equal(t, 5, len(h))
+
+	h, err = HashEx([]*big.Int{b3, b4, b0, b0, b0, b0}, 6)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"12263118664590987767234828103155242843640892839966517009184493198782366909018",
+		h[0].String())
+	assert.Equal(t, 6, len(h))
+
+	h, err = HashEx([]*big.Int{b1, b2, b3, b4, b5, b6}, 7)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"20400040500897583745843009878988256314335038853985262692600694741116813247201",
+		h[0].String())
+	assert.Equal(t, 7, len(h))
+
+	h, err = HashEx([]*big.Int{b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14}, 8)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"8354478399926161176778659061636406690034081872658507739535256090879947077494",
+		h[0].String())
+	assert.Equal(t, 8, len(h))
+
+	h, err = HashEx([]*big.Int{b1, b2, b3, b4, b5, b6, b7, b8, b9, b0, b0, b0, b0, b0}, 9)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"5540388656744764564518487011617040650780060800286365721923524861648744699539",
+		h[0].String())
+	assert.Equal(t, 9, len(h))
+
+	h, err = HashEx([]*big.Int{b1, b2, b3, b4, b5, b6, b7, b8, b9, b0, b0, b0, b0, b0, b0, b0}, 10)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"11882816200654282475720830292386643970958445617880627439994635298904836126497",
+		h[0].String())
+	assert.Equal(t, 10, len(h))
+
+	h, err = HashEx([]*big.Int{b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16}, 11)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"9989051620750914585850546081941653841776809718687451684622678807385399211877",
+		h[0].String())
+	assert.Equal(t, 11, len(h))
+}
+
 func TestErrorInputs(t *testing.T) {
 	b0 := big.NewInt(0)
 	b1 := big.NewInt(1)
