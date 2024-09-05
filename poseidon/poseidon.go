@@ -78,6 +78,9 @@ func hashWithState(inpBI []*big.Int, initState *big.Int, nOuts int) ([]*big.Int,
 	if !utils.CheckBigIntArrayInField(inpBI) {
 		return nil, errors.New("inputs values not inside Finite Field")
 	}
+	if nOuts < 1 || nOuts > t {
+		return nil, fmt.Errorf("invalid nOuts %d, min 1, max %d", nOuts, t)
+	}
 	inp := utils.BigIntArrayToElementArray(inpBI)
 
 	nRoundsF := NROUNDSF

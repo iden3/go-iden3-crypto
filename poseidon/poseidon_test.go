@@ -209,6 +209,12 @@ func TestErrorInputs(t *testing.T) {
 	_, err = Hash([]*big.Int{b1, b2, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0, b0})
 	require.NotNil(t, err)
 	assert.Equal(t, "invalid inputs length 18, max 16", err.Error())
+
+	_, err = HashEx([]*big.Int{b1, b2}, 0)
+	assert.EqualError(t, err, "invalid nOuts 0, min 1, max 3")
+
+	_, err = HashEx([]*big.Int{b1, b2}, 4)
+	assert.EqualError(t, err, "invalid nOuts 4, min 1, max 3")
 }
 
 func TestInputsNotInField(t *testing.T) {
