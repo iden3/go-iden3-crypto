@@ -63,14 +63,14 @@ func mix(state []*ff.Element, t int, m [][]*ff.Element) []*ff.Element {
 
 // HashWithState computes the Poseidon hash for the given inputs and initState
 func HashWithState(inpBI []*big.Int, initState *big.Int) (*big.Int, error) {
-	res, err := hashWithState(inpBI, initState, 1)
+	res, err := HashWithStateEx(inpBI, initState, 1)
 	if err != nil {
 		return nil, err
 	}
 	return res[0], nil
 }
 
-func hashWithState(inpBI []*big.Int, initState *big.Int, nOuts int) ([]*big.Int, error) {
+func HashWithStateEx(inpBI []*big.Int, initState *big.Int, nOuts int) ([]*big.Int, error) {
 	t := len(inpBI) + 1
 	if len(inpBI) == 0 || len(inpBI) > len(NROUNDSP) {
 		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP))
@@ -153,7 +153,7 @@ func Hash(inpBI []*big.Int) (*big.Int, error) {
 // HashEx computes the Poseidon hash for the given inputs and returns
 // the first nOuts outputs that include intermediate states
 func HashEx(inpBI []*big.Int, nOuts int) ([]*big.Int, error) {
-	return hashWithState(inpBI, big.NewInt(0), nOuts)
+	return HashWithStateEx(inpBI, big.NewInt(0), nOuts)
 }
 
 // HashBytes returns a sponge hash of a msg byte slice split into blocks of 31 bytes
