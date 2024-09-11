@@ -90,7 +90,7 @@ func HexDecodeInto(dst, h []byte) error {
 
 // CheckBigIntInField checks if given *big.Int fits in a Field Q element
 func CheckBigIntInField(a *big.Int) bool {
-	return a.Cmp(constants.Q) == -1
+	return (a.Cmp(constants.Q) == -1) && (a.Cmp(constants.Zero) != -1)
 }
 
 // CheckBigIntArrayInField checks if given *big.Int fits in a Field Q element
