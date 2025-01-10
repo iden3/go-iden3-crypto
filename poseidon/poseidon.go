@@ -63,12 +63,23 @@ func mix(state []*ff.Element, t int, m [][]*ff.Element) []*ff.Element {
 
 // HashWithState computes the Poseidon hash for the given inputs and initState
 func HashWithState(inpBI []*big.Int, initState *big.Int) (*big.Int, error) {
+	res, err := HashWithStateEx(inpBI, initState, 1)
+	if err != nil {
+		return nil, err
+	}
+	return res[0], nil
+}
+
+func HashWithStateEx(inpBI []*big.Int, initState *big.Int, nOuts int) ([]*big.Int, error) {
 	t := len(inpBI) + 1
 	if len(inpBI) == 0 || len(inpBI) > len(NROUNDSP) {
 		return nil, fmt.Errorf("invalid inputs length %d, max %d", len(inpBI), len(NROUNDSP))
 	}
 	if !utils.CheckBigIntArrayInField(inpBI) {
 		return nil, errors.New("inputs values not inside Finite Field")
+	}
+	if nOuts < 1 || nOuts > t {
+		return nil, fmt.Errorf("invalid nOuts %d, min 1, max %d", nOuts, t)
 	}
 	inp := utils.BigIntArrayToElementArray(inpBI)
 
@@ -125,15 +136,24 @@ func HashWithState(inpBI []*big.Int, initState *big.Int) (*big.Int, error) {
 	exp5state(state)
 	state = mix(state, t, M)
 
-	rE := state[0]
-	r := big.NewInt(0)
-	rE.ToBigIntRegular(r)
+	r := make([]*big.Int, nOuts)
+	for i := 0; i < nOuts; i++ {
+		rE := state[i]
+		r[i] = big.NewInt(0)
+		rE.ToBigIntRegular(r[i])
+	}
 	return r, nil
 }
 
 // Hash computes the Poseidon hash for the given inputs
 func Hash(inpBI []*big.Int) (*big.Int, error) {
 	return HashWithState(inpBI, big.NewInt(0))
+}
+
+// HashEx computes the Poseidon hash for the given inputs and returns
+// the first nOuts outputs that include intermediate states
+func HashEx(inpBI []*big.Int, nOuts int) ([]*big.Int, error) {
+	return HashWithStateEx(inpBI, big.NewInt(0), nOuts)
 }
 
 // HashBytes returns a sponge hash of a msg byte slice split into blocks of 31 bytes
