@@ -1,6 +1,6 @@
 module github.com/iden3/go-iden3-crypto
 
-go 1.21
+go 1.20
 
 require (
 	github.com/dchest/blake512 v1.0.0
