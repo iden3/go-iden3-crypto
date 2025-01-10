@@ -401,12 +401,14 @@ func TestInitStateNotInField(t *testing.T) {
 	b1 := big.NewInt(1)
 
 	// Very big number, should just return error and not go into endless loop
-	initState := utils.NewIntFromString("12242166908188651009877250812424843524687801523336557272219921456462821518061999999999999999999999999999999999999999999999999999999999")
+	initState, err := utils.NewIntFromString("12242166908188651009877250812424843524687801523336557272219921456462821518061999999999999999999999999999999999999999999999999999999999")
+	require.NoError(t, err)
 	_, err = HashWithState([]*big.Int{b0, b1}, initState)
 	require.Error(t, err, "initState values not inside Finite Field")
 
 	// Finite Field const Q, should return error
-	initState = utils.NewIntFromString("21888242871839275222246405745257275088548364400416034343698204186575808495617")
+	initState, err = utils.NewIntFromString("21888242871839275222246405745257275088548364400416034343698204186575808495617")
+	require.NoError(t, err)
 	_, err = HashWithState([]*big.Int{b0, b1}, initState)
 	require.Error(t, err, "initState values not inside Finite Field")
 }
