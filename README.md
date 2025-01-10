@@ -6,6 +6,7 @@ Go implementation of some cryptographic primitives (that fit inside the SNARK fi
 * Poseidon hash for BN254
 * Poseidon hash for Goldilocks
 * MIMC7
+* Pedersen
 
 ## Contributing
 
