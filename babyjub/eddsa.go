@@ -6,12 +6,20 @@ package babyjub
 import (
 	"crypto/rand"
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"math/big"
 
 	"github.com/iden3/go-iden3-crypto/v2/mimc7"
 	"github.com/iden3/go-iden3-crypto/v2/poseidon"
 	"github.com/iden3/go-iden3-crypto/v2/utils"
+)
+
+var (
+	// ErrVerifyPoseidonFailed BJJ EdDSA (with Poseidon digest) signature verification failed
+	ErrVerifyPoseidonFailed = errors.New("verifyPoseidon failed")
+	// ErrVerifyMimc7Failed BJJ EdDSA (with Mimc7 digest) signature verification failed
+	ErrVerifyMimc7Failed = errors.New("verifyMimc7 failed")
 )
 
 // pruneBuffer prunes the buffer during key generation according to RFC 8032.
@@ -285,7 +293,7 @@ func (pk *PublicKey) VerifyMimc7(msg *big.Int, sig *Signature) error {
 	if (left.X.Cmp(right.X) == 0) && (left.Y.Cmp(right.Y) == 0) {
 		return nil
 	}
-	return fmt.Errorf("verifyMimc7 failed")
+	return ErrVerifyMimc7Failed
 }
 
 // SignPoseidon signs a message encoded as a big.Int in Zq using blake-512 hash
@@ -334,7 +342,7 @@ func (pk *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) error {
 	if (left.X.Cmp(right.X) == 0) && (left.Y.Cmp(right.Y) == 0) {
 		return nil
 	}
-	return fmt.Errorf("verifyPoseidon failed")
+	return ErrVerifyPoseidonFailed
 }
 
 // Scan implements Scanner for database/sql.

@@ -20,9 +20,9 @@ func Blake512(m []byte) []byte {
 }
 
 // DecompressSig decompresses a compressed signature.
-func DecompressSig(commpresedSig []byte) (*Signature, error) {
+func DecompressSig(compressedSig []byte) (*Signature, error) {
 	poseidonComSig := &SignatureComp{}
-	if err := poseidonComSig.UnmarshalText(commpresedSig); err != nil {
+	if err := poseidonComSig.UnmarshalText(compressedSig); err != nil {
 		return nil, err
 	}
 	poseidonDecSig, err := poseidonComSig.Decompress()

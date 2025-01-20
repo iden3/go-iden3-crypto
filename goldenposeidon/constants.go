@@ -824,7 +824,7 @@ var (
 	M [][]*ffg.Element
 	// P is a matrix
 	P [][]*ffg.Element
-	// S is a array of element
+	// S is an array of element
 	S []*ffg.Element
 )
 
