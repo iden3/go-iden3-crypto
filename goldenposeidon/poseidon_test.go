@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const prime uint64 = 18446744069414584321
@@ -16,7 +17,7 @@ func TestPoseidonHashCompare(t *testing.T) {
 
 	h, err := Hash([NROUNDSF]uint64{b0, b0, b0, b0, b0, b0, b0, b0},
 		[CAPLEN]uint64{b0, b0, b0, b0})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
 			4330397376401421145,
@@ -28,7 +29,7 @@ func TestPoseidonHashCompare(t *testing.T) {
 
 	h, err = Hash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1},
 		[CAPLEN]uint64{b1, b1, b1, b1})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
 			16428316519797902711,
@@ -40,7 +41,7 @@ func TestPoseidonHashCompare(t *testing.T) {
 
 	h, err = Hash([NROUNDSF]uint64{b1, b1, b1, b1, b1, b1, b1, b1},
 		[CAPLEN]uint64{b1, b1, b1, b1})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
 			16428316519797902711,
@@ -54,7 +55,7 @@ func TestPoseidonHashCompare(t *testing.T) {
 		[NROUNDSF]uint64{bm1, bm1, bm1, bm1, bm1, bm1, bm1, bm1},
 		[CAPLEN]uint64{bm1, bm1, bm1, bm1},
 	)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
 			13691089994624172887,
@@ -66,7 +67,7 @@ func TestPoseidonHashCompare(t *testing.T) {
 
 	h, err = Hash([NROUNDSF]uint64{bM, bM, bM, bM, bM, bM, bM, bM},
 		[CAPLEN]uint64{b0, b0, b0, b0})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
 			4330397376401421145,
@@ -86,7 +87,7 @@ func TestPoseidonHashCompare(t *testing.T) {
 		uint64(6254867324987),
 		uint64(2087),
 	}, [CAPLEN]uint64{b0, b0, b0, b0})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t,
 		[CAPLEN]uint64{
 			1892171027578617759,

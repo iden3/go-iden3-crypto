@@ -4,10 +4,10 @@ import (
 	"errors"
 	"math/big"
 
-	_constants "github.com/iden3/go-iden3-crypto/constants"
-	"github.com/iden3/go-iden3-crypto/ff"
-	"github.com/iden3/go-iden3-crypto/keccak256"
-	"github.com/iden3/go-iden3-crypto/utils"
+	_constants "github.com/iden3/go-iden3-crypto/v2/constants"
+	"github.com/iden3/go-iden3-crypto/v2/ff"
+	"github.com/iden3/go-iden3-crypto/v2/keccak256"
+	"github.com/iden3/go-iden3-crypto/v2/utils"
 )
 
 // SEED defines the seed used to constants
@@ -141,7 +141,7 @@ func Hash(arr []*big.Int, key *big.Int) (*big.Int, error) {
 
 // HashBytes hashes a msg byte slice by blocks of 31 bytes encoded as
 // little-endian
-func HashBytes(b []byte) *big.Int {
+func HashBytes(b []byte) (*big.Int, error) {
 	n := 31
 	bElems := make([]*big.Int, 0, len(b)/n+1)
 	for i := 0; i < len(b)/n; i++ {
@@ -156,7 +156,7 @@ func HashBytes(b []byte) *big.Int {
 	}
 	h, err := Hash(bElems, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return h
+	return h, nil
 }

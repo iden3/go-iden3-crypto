@@ -6,12 +6,20 @@ package babyjub
 import (
 	"crypto/rand"
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"math/big"
 
-	"github.com/iden3/go-iden3-crypto/mimc7"
-	"github.com/iden3/go-iden3-crypto/poseidon"
-	"github.com/iden3/go-iden3-crypto/utils"
+	"github.com/iden3/go-iden3-crypto/v2/mimc7"
+	"github.com/iden3/go-iden3-crypto/v2/poseidon"
+	"github.com/iden3/go-iden3-crypto/v2/utils"
+)
+
+var (
+	// ErrVerifyPoseidonFailed BJJ EdDSA (with Poseidon digest) signature verification failed
+	ErrVerifyPoseidonFailed = errors.New("verifyPoseidon failed")
+	// ErrVerifyMimc7Failed BJJ EdDSA (with Mimc7 digest) signature verification failed
+	ErrVerifyMimc7Failed = errors.New("verifyMimc7 failed")
 )
 
 // pruneBuffer prunes the buffer during key generation according to RFC 8032.
@@ -28,13 +36,13 @@ type PrivateKey [32]byte
 
 // NewRandPrivKey generates a new random private key (using cryptographically
 // secure randomness).
-func NewRandPrivKey() PrivateKey {
+func NewRandPrivKey() (PrivateKey, error) {
 	var k PrivateKey
 	_, err := rand.Read(k[:])
 	if err != nil {
-		panic(err)
+		return PrivateKey{}, err
 	}
-	return k
+	return k, nil
 }
 
 // Scalar converts a private key into the scalar value s following the EdDSA
@@ -243,7 +251,7 @@ func (s Signature) Value() (driver.Value, error) {
 
 // SignMimc7 signs a message encoded as a big.Int in Zq using blake-512 hash
 // for buffer hashing and mimc7 for big.Int hashing.
-func (k *PrivateKey) SignMimc7(msg *big.Int) *Signature {
+func (k *PrivateKey) SignMimc7(msg *big.Int) (*Signature, error) {
 	h1 := Blake512(k[:])
 	msgBuf := utils.BigIntLEBytes(msg)
 	msgBuf32 := [32]byte{}
@@ -256,23 +264,23 @@ func (k *PrivateKey) SignMimc7(msg *big.Int) *Signature {
 	hmInput := []*big.Int{R8.X, R8.Y, A.X, A.Y, msg}
 	hm, err := mimc7.Hash(hmInput, nil) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	S := new(big.Int).Lsh(k.Scalar().BigInt(), 3)
 	S = S.Mul(hm, S)
 	S.Add(r, S)
 	S.Mod(S, SubOrder) // S = r + hm * 8 * s
 
-	return &Signature{R8: R8, S: S}
+	return &Signature{R8: R8, S: S}, nil
 }
 
 // VerifyMimc7 verifies the signature of a message encoded as a big.Int in Zq
 // using blake-512 hash for buffer hashing and mimc7 for big.Int hashing.
-func (pk *PublicKey) VerifyMimc7(msg *big.Int, sig *Signature) bool {
+func (pk *PublicKey) VerifyMimc7(msg *big.Int, sig *Signature) error {
 	hmInput := []*big.Int{sig.R8.X, sig.R8.Y, pk.X, pk.Y, msg}
 	hm, err := mimc7.Hash(hmInput, nil) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
-		return false
+		return err
 	}
 
 	left := NewPoint().Mul(sig.S, B8) // left = s * 8 * B
@@ -282,12 +290,15 @@ func (pk *PublicKey) VerifyMimc7(msg *big.Int, sig *Signature) bool {
 	rightProj := right.Projective()
 	rightProj.Add(sig.R8.Projective(), rightProj) // right = 8 * R + 8 * hm * A
 	right = rightProj.Affine()
-	return (left.X.Cmp(right.X) == 0) && (left.Y.Cmp(right.Y) == 0)
+	if (left.X.Cmp(right.X) == 0) && (left.Y.Cmp(right.Y) == 0) {
+		return nil
+	}
+	return ErrVerifyMimc7Failed
 }
 
 // SignPoseidon signs a message encoded as a big.Int in Zq using blake-512 hash
 // for buffer hashing and Poseidon for big.Int hashing.
-func (k *PrivateKey) SignPoseidon(msg *big.Int) *Signature {
+func (k *PrivateKey) SignPoseidon(msg *big.Int) (*Signature, error) {
 	h1 := Blake512(k[:])
 	msgBuf := utils.BigIntLEBytes(msg)
 	msgBuf32 := [32]byte{}
@@ -301,7 +312,7 @@ func (k *PrivateKey) SignPoseidon(msg *big.Int) *Signature {
 	hmInput := []*big.Int{R8.X, R8.Y, A.X, A.Y, msg}
 	hm, err := poseidon.Hash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	S := new(big.Int).Lsh(k.Scalar().BigInt(), 3)
@@ -309,16 +320,16 @@ func (k *PrivateKey) SignPoseidon(msg *big.Int) *Signature {
 	S.Add(r, S)
 	S.Mod(S, SubOrder) // S = r + hm * 8 * s
 
-	return &Signature{R8: R8, S: S}
+	return &Signature{R8: R8, S: S}, nil
 }
 
 // VerifyPoseidon verifies the signature of a message encoded as a big.Int in Zq
 // using blake-512 hash for buffer hashing and Poseidon for big.Int hashing.
-func (pk *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
+func (pk *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) error {
 	hmInput := []*big.Int{sig.R8.X, sig.R8.Y, pk.X, pk.Y, msg}
 	hm, err := poseidon.Hash(hmInput) // hm = H1(8*R.x, 8*R.y, A.x, A.y, msg)
 	if err != nil {
-		return false
+		return err
 	}
 
 	left := NewPoint().Mul(sig.S, B8) // left = s * 8 * B
@@ -328,7 +339,10 @@ func (pk *PublicKey) VerifyPoseidon(msg *big.Int, sig *Signature) bool {
 	rightProj := right.Projective()
 	rightProj.Add(sig.R8.Projective(), rightProj) // right = 8 * R + 8 * hm * A
 	right = rightProj.Affine()
-	return (left.X.Cmp(right.X) == 0) && (left.Y.Cmp(right.Y) == 0)
+	if (left.X.Cmp(right.X) == 0) && (left.Y.Cmp(right.Y) == 0) {
+		return nil
+	}
+	return ErrVerifyPoseidonFailed
 }
 
 // Scan implements Scanner for database/sql.

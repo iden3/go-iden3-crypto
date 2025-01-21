@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/iden3/go-iden3-crypto/constants"
-	"github.com/iden3/go-iden3-crypto/utils"
+	"github.com/iden3/go-iden3-crypto/v2/constants"
+	"github.com/iden3/go-iden3-crypto/v2/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,15 +22,15 @@ func TestAdd1(t *testing.T) {
 }
 
 func TestAdd2(t *testing.T) {
-	aX := utils.NewIntFromString(
+	aX, _ := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	aY := utils.NewIntFromString(
+	aY, _ := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	a := &Point{X: aX, Y: aY}
 
-	bX := utils.NewIntFromString(
+	bX, _ := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	bY := utils.NewIntFromString(
+	bY, _ := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	b := &Point{X: bX, Y: bY}
 
@@ -57,15 +57,15 @@ func TestAdd2(t *testing.T) {
 }
 
 func TestAdd3(t *testing.T) {
-	aX := utils.NewIntFromString(
+	aX, _ := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	aY := utils.NewIntFromString(
+	aY, _ := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	a := &Point{X: aX, Y: aY}
 
-	bX := utils.NewIntFromString(
+	bX, _ := utils.NewIntFromString(
 		"16540640123574156134436876038791482806971768689494387082833631921987005038935")
-	bY := utils.NewIntFromString(
+	bY, _ := utils.NewIntFromString(
 		"20819045374670962167435360035096875258406992893633759881276124905556507972311")
 	b := &Point{X: bX, Y: bY}
 
@@ -80,15 +80,15 @@ func TestAdd3(t *testing.T) {
 }
 
 func TestAdd4(t *testing.T) {
-	aX := utils.NewIntFromString(
+	aX, _ := utils.NewIntFromString(
 		"0")
-	aY := utils.NewIntFromString(
+	aY, _ := utils.NewIntFromString(
 		"1")
 	a := &Point{X: aX, Y: aY}
 
-	bX := utils.NewIntFromString(
+	bX, _ := utils.NewIntFromString(
 		"16540640123574156134436876038791482806971768689494387082833631921987005038935")
-	bY := utils.NewIntFromString(
+	bY, _ := utils.NewIntFromString(
 		"20819045374670962167435360035096875258406992893633759881276124905556507972311")
 	b := &Point{X: bX, Y: bY}
 
@@ -113,12 +113,12 @@ func TestInCurve2(t *testing.T) {
 }
 
 func TestMul0(t *testing.T) {
-	x := utils.NewIntFromString(
+	x, _ := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := utils.NewIntFromString(
+	y, _ := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
-	s := utils.NewIntFromString("3")
+	s, _ := utils.NewIntFromString("3")
 
 	r2 := NewPoint().Projective().Add(p.Projective(), p.Projective()).Affine()
 	r2 = NewPoint().Projective().Add(r2.Projective(), p.Projective()).Affine()
@@ -135,12 +135,12 @@ func TestMul0(t *testing.T) {
 }
 
 func TestMul1(t *testing.T) {
-	x := utils.NewIntFromString(
+	x, _ := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := utils.NewIntFromString(
+	y, _ := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
-	s := utils.NewIntFromString(
+	s, _ := utils.NewIntFromString(
 		"14035240266687799601661095864649209771790948434046947201833777492504781204499")
 	r := NewPoint().Mul(s, p)
 	assert.Equal(t,
@@ -152,12 +152,12 @@ func TestMul1(t *testing.T) {
 }
 
 func TestMul2(t *testing.T) {
-	x := utils.NewIntFromString(
+	x, _ := utils.NewIntFromString(
 		"6890855772600357754907169075114257697580319025794532037257385534741338397365")
-	y := utils.NewIntFromString(
+	y, _ := utils.NewIntFromString(
 		"4338620300185947561074059802482547481416142213883829469920100239455078257889")
 	p := &Point{X: x, Y: y}
-	s := utils.NewIntFromString(
+	s, _ := utils.NewIntFromString(
 		"20819045374670962167435360035096875258406992893633759881276124905556507972311")
 	r := NewPoint().Mul(s, p)
 	assert.Equal(t,
@@ -169,45 +169,45 @@ func TestMul2(t *testing.T) {
 }
 
 func TestInCurve3(t *testing.T) {
-	x := utils.NewIntFromString(
+	x, _ := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := utils.NewIntFromString(
+	y, _ := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
 	assert.Equal(t, true, p.InCurve())
 }
 
 func TestInCurve4(t *testing.T) {
-	x := utils.NewIntFromString(
+	x, _ := utils.NewIntFromString(
 		"6890855772600357754907169075114257697580319025794532037257385534741338397365")
-	y := utils.NewIntFromString(
+	y, _ := utils.NewIntFromString(
 		"4338620300185947561074059802482547481416142213883829469920100239455078257889")
 	p := &Point{X: x, Y: y}
 	assert.Equal(t, true, p.InCurve())
 }
 
 func TestInSubGroup1(t *testing.T) {
-	x := utils.NewIntFromString(
+	x, _ := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := utils.NewIntFromString(
+	y, _ := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
 	assert.Equal(t, true, p.InSubGroup())
 }
 
 func TestInSubGroup2(t *testing.T) {
-	x := utils.NewIntFromString(
+	x, _ := utils.NewIntFromString(
 		"6890855772600357754907169075114257697580319025794532037257385534741338397365")
-	y := utils.NewIntFromString(
+	y, _ := utils.NewIntFromString(
 		"4338620300185947561074059802482547481416142213883829469920100239455078257889")
 	p := &Point{X: x, Y: y}
 	assert.Equal(t, true, p.InSubGroup())
 }
 
 func TestPointFromSignAndy(t *testing.T) {
-	x := utils.NewIntFromString(
+	x, _ := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := utils.NewIntFromString(
+	y, _ := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
 
@@ -219,9 +219,9 @@ func TestPointFromSignAndy(t *testing.T) {
 }
 
 func TestPackAndUnpackSignY(t *testing.T) {
-	x := utils.NewIntFromString(
+	x, _ := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := utils.NewIntFromString(
+	y, _ := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
 	pComp := p.Compress()
@@ -239,9 +239,9 @@ func TestPackAndUnpackSignY(t *testing.T) {
 }
 
 func TestCompressDecompress1(t *testing.T) {
-	x := utils.NewIntFromString(
+	x, _ := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	y := utils.NewIntFromString(
+	y, _ := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	p := &Point{X: x, Y: y}
 
@@ -257,9 +257,9 @@ func TestCompressDecompress1(t *testing.T) {
 }
 
 func TestCompressDecompress2(t *testing.T) {
-	x := utils.NewIntFromString(
+	x, _ := utils.NewIntFromString(
 		"6890855772600357754907169075114257697580319025794532037257385534741338397365")
-	y := utils.NewIntFromString(
+	y, _ := utils.NewIntFromString(
 		"4338620300185947561074059802482547481416142213883829469920100239455078257889")
 	p := &Point{X: x, Y: y}
 
@@ -299,9 +299,9 @@ func BenchmarkBabyjub(b *testing.B) {
 
 	var points [n]*Point
 	var pointsProj [n]*PointProjective
-	baseX := utils.NewIntFromString(
+	baseX, _ := utils.NewIntFromString(
 		"17777552123799933955779906779655732241715742912184938656739573121738514868268")
-	baseY := utils.NewIntFromString(
+	baseY, _ := utils.NewIntFromString(
 		"2626589144620713026669568689430873010625803728049924121243784502389097019475")
 	base := &Point{X: baseX, Y: baseY}
 	for i := 0; i < n; i++ {
