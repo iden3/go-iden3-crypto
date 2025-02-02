@@ -92,7 +92,7 @@ func HashGeneric(iv *big.Int, arr []*big.Int, nRounds int) (*big.Int, error) {
 }
 
 // MIMC7Hash performs the MIMC7 hash over a *big.Int, using the Finite Field
-// over R and the number of rounds setted in the `constants` variable
+// over R and the number of rounds set in the `constants` variable
 func MIMC7Hash(xInBI, kBI *big.Int) *big.Int { //nolint:golint
 	xIn := ff.NewElement().SetBigInt(xInBI)
 	k := ff.NewElement().SetBigInt(kBI)
