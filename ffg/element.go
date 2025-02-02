@@ -157,7 +157,7 @@ func (z *Element) Div(x, y *Element) *Element {
 }
 
 // Bit returns the i'th bit, with lsb == bit 0.
-// It is the responsability of the caller to convert from Montgomery to Regular form if needed
+// It is the responsibility of the caller to convert from Montgomery to Regular form if needed
 func (z *Element) Bit(i uint64) uint64 {
 	j := i / 64
 	if j >= 1 {
