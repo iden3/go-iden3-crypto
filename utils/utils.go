@@ -22,7 +22,7 @@ func NewIntFromString(s string) (*big.Int, error) {
 }
 
 // SwapEndianness swaps the endianness of the value encoded in xs.  If xs is
-// Big-Endian, the result will be Little-Endian and viceversa.
+// Big-Endian, the result will be Little-Endian and vice-versa.
 func SwapEndianness(xs []byte) []byte {
 	ys := make([]byte, len(xs))
 	for i, b := range xs {
